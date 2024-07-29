@@ -17,6 +17,9 @@ import DataPeserta from './pages/DataPeserta';
 import LihatAbsen from './pages/LihatAbsen';
 import LaporanPembimbing from './pages/LaporanPembimbing';
 import PenilaianPembimbing from './pages/PenilaianPembimbing';
+import DashboardAdmin from './pages/DashboardAdmin';
+import DashboardMahasiswa from './pages/DashboardMahasiswa';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function LayoutSidebar({ sidebar: SidebarComponent, navbar: NavbarComponent }) {
   return (
@@ -46,6 +49,31 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route
+          path="/dashboard/mahasiswa"
+          element={
+            <ProtectedRoute role="mahasiswa">
+              <DashboardMahasiswa />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/admin"
+          element={
+            <ProtectedRoute role="admin">
+              <DashboardAdmin />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/admin/penilaian"
+          element={
+            <ProtectedRoute role="admin">
+              <DashboardAdmin />
+            </ProtectedRoute>
+          }
+        />
+
       <Route
         path="/*"
         element={

@@ -1,10 +1,25 @@
 import logo from "../assets/logo.png";
 import axios from "axios";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  // Check for token and role on component mount
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    const role = localStorage.getItem("role");
+    if (token && role) {
+      if (role === "mahasiswa") {
+        navigate("/dashboard/mahasiswa");
+      } else if (role === "admin") {
+        navigate("/dashboard/admin");
+      }
+    }
+  }, [navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -15,12 +30,22 @@ export default function Login() {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "http://192.168.206.22:8000/api/v1/login",
+        "http://192.168.43.229:8000/api/v1/login",
         loginData
       );
-      // Assuming the API response contains a token
-      console.log(response.data); // handle the response as needed
-      // You can store the token in localStorage or context state
+
+      const { access_token, role } = response.data;
+
+      // Save access token to local storage
+      localStorage.setItem("access_token", access_token);
+      localStorage.setItem("role", role);
+
+      // Redirect based on role
+      if (role === "mahasiswa") {
+        navigate("/dashboard/mahasiswa");
+      } else if (role === "admin") {
+        navigate("/dashboard/admin");
+      }
     } catch (err) {
       setError("Login failed. Please check your credentials and try again.");
     }
