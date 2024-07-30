@@ -1,5 +1,5 @@
 /* eslint-disable-next-line no-unused-vars */
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   HomeIcon,
@@ -29,22 +29,18 @@ function Navbar() {
   );
 }
 
-export default function DataPeserta() {
+export default function PengaturanPembimbing() {
   const navigate = useNavigate();
   const role = localStorage.getItem("role");
-  const [peserta, setPeserta] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
-  useEffect(() => {
-    // Fetch data peserta yang diampuh oleh Pembimbing Lapangan
-    // Contoh fetch data dari API atau server
-    // setPeserta(dataDariServer);
-  }, []);
-
-  const filteredPeserta = peserta.filter((data) =>
-    data.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    data.asalSekolah.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Tambahkan logika untuk mengubah password di sini
+    console.log('Password diubah:', { currentPassword, newPassword, confirmPassword });
+  };
 
   const handleLogout = () => {
     // Clear local storage
@@ -123,38 +119,42 @@ export default function DataPeserta() {
       <div className="flex flex-col flex-1 ml-64">
         <Navbar />
         <main className="flex-1 p-4">
-          <h1 className="text-2xl font-bold mb-4">Data Peserta</h1>
-          <div className="mb-4">
-            <input
-              type="text"
-              className="w-full p-2 border rounded"
-              placeholder="Cari Nama atau Asal Sekolah/Univ"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <table className="min-w-full bg-white border border-gray-300 rounded-md">
-            <thead className="bg-gray-700 text-white">
-              <tr>
-                <th className="py-2 px-4 border">No</th>
-                <th className="py-2 px-4 border">Nama</th>
-                <th className="py-2 px-4 border">Mulai Magang</th>
-                <th className="py-2 px-4 border">Akhir Magang</th>
-                <th className="py-2 px-4 border">Asal Sekolah/Univ</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredPeserta.map((data, index) => (
-                <tr key={index} className="hover:bg-gray-200">
-                  <td className="py-2 px-4 border">{index + 1}</td>
-                  <td className="py-2 px-4 border">{data.nama}</td>
-                  <td className="py-2 px-4 border">{data.mulaiMagang}</td>
-                  <td className="py-2 px-4 border">{data.akhirMagang}</td>
-                  <td className="py-2 px-4 border">{data.asalSekolah}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <h1 className="text-2xl font-bold mb-4">Pengaturan</h1>
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <label className="block mb-2 text-lg">Password Saat Ini:</label>
+              <input
+                type="password"
+                className="w-full p-2 border border-gray-300 rounded-md"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block mb-2 text-lg">Password Baru:</label>
+              <input
+                type="password"
+                className="w-full p-2 border border-gray-300 rounded-md"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block mb-2 text-lg">Konfirmasi Password Baru:</label>
+              <input
+                type="password"
+                className="w-full p-2 border border-gray-300 rounded-md"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
+            </div>
+            <button className="bg-blue-950 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition">
+              Ubah Password
+            </button>
+          </form>
         </main>
       </div>
     </div>

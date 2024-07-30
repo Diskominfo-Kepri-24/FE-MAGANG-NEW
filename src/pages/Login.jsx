@@ -15,8 +15,8 @@ export default function Login() {
     if (token && role) {
       if (role === "mahasiswa") {
         navigate("/dashboard/mahasiswa");
-      } else if (role === "admin") {
-        navigate("/dashboard/admin");
+      } else if (role === "pembimbing") {
+        navigate("/dashboard/pembimbing");
       }
     }
   }, [navigate]);
@@ -30,7 +30,7 @@ export default function Login() {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "http://192.168.43.229:8000/api/v1/login",
+        "http://127.0.0.1:8000/api/v1/magang/login",
         loginData
       );
 
@@ -43,8 +43,8 @@ export default function Login() {
       // Redirect based on role
       if (role === "mahasiswa") {
         navigate("/dashboard/mahasiswa");
-      } else if (role === "admin") {
-        navigate("/dashboard/admin");
+      } else if (role === "pembimbing") {
+        navigate("/dashboard/pembimbing");
       }
     } catch (err) {
       setError("Login failed. Please check your credentials and try again.");
