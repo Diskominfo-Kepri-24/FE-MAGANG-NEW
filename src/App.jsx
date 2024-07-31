@@ -1,17 +1,16 @@
 import { Routes, Route } from 'react-router-dom';
 import Login from './pages/Login';
-import Beranda from './pages/Beranda';
 import Absen from './pages/Absen';
 import Kegiatan from './pages/Kegiatan';
 import Laporan from './pages/Laporan';
 import Penilaian from './pages/Penilaian';
 import Riwayat from './pages/Riwayat';
 import Pengaturan from './pages/Pengaturan';
-import BerandaPembimbing from './pages/BerandaPembimbing';
 import DataPeserta from './pages/DataPeserta';
 import LihatAbsen from './pages/LihatAbsen';
 import LaporanPembimbing from './pages/LaporanPembimbing';
 import PenilaianPembimbing from './pages/PenilaianPembimbing';
+import PengaturanPembimbing from './pages/PengaturanPembimbing';
 import DashboardPembimbing from './components/DashboardPembimbing';
 import DashboardMahasiswa from './components/DashboardMahasiswa';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -28,8 +27,63 @@ function App() {
           </ProtectedRoute>
         }
       >
-      
       </Route>
+      <Route
+        path="/dashboard/absen"
+        element={
+          <ProtectedRoute role="mahasiswa">
+            <Absen />
+          </ProtectedRoute>
+        }
+      >
+      </Route>
+      <Route
+        path="/dashboard/kegiatan"
+        element={
+          <ProtectedRoute role="mahasiswa">
+            <Kegiatan />
+          </ProtectedRoute>
+        }
+      >
+      </Route>
+      <Route
+        path="/dashboard/laporan"
+        element={
+          <ProtectedRoute role="mahasiswa">
+            <Laporan />
+          </ProtectedRoute>
+        }
+      >
+      </Route>
+      <Route
+        path="/dashboard/penilaian"
+        element={
+          <ProtectedRoute role="mahasiswa">
+            <Penilaian />
+          </ProtectedRoute>
+        }
+      >
+      </Route>
+      <Route
+        path="/dashboard/riwayat"
+        element={
+          <ProtectedRoute role="mahasiswa">
+            <Riwayat />
+          </ProtectedRoute>
+        }
+      >
+      </Route>
+      <Route
+        path="/dashboard/pengaturan"
+        element={
+          <ProtectedRoute role="mahasiswa">
+            <Pengaturan />
+          </ProtectedRoute>
+        }
+      >
+      </Route>
+
+      
       <Route
         path="/dashboard/pembimbing"
         element={

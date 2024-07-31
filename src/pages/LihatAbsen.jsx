@@ -10,6 +10,7 @@ import {
   ArrowLeftOnRectangleIcon,
   CogIcon,
 } from '@heroicons/react/24/outline';
+import axios from 'axios';
 
 function Navbar() {
   return (
@@ -36,13 +37,25 @@ export default function LihatAbsen() {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    // Fetch data absen dari server atau API
-    // setAbsenList(dataDariServer);
+    const fetchAbsenList = async () => {
+      const token = localStorage.getItem("access_token");
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/api/v1/absen', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        // console.log(response.data.user);
+        setAbsenList(response.data.user);
+      } catch (error) {
+        console.error('Error fetching absen list:', error);
+      }
+    };
+
+    fetchAbsenList();
   }, []);
 
-  const filteredAbsenList = absenList.filter((absen) =>
-    absen.nama.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+
 
   const handleStatusChange = (index, newStatus) => {
     const updatedAbsenList = [...absenList];
@@ -149,15 +162,15 @@ export default function LihatAbsen() {
               </tr>
             </thead>
             <tbody>
-              {filteredAbsenList.map((absen, index) => (
+              {absenList.map((absen, index) => (
                 <tr key={index} className="hover:bg-gray-200">
                   <td className="py-2 px-4 border">{index + 1}</td>
-                  <td className="py-2 px-4 border">{absen.nama}</td>
+                  <td className="py-2 px-4 border">{absen.name}</td>
                   <td className="py-2 px-4 border">{absen.tanggal}</td>
-                  <td className="py-2 px-4 border">{absen.jamMasuk || '-'}</td>
-                  <td className="py-2 px-4 border">{absen.jamPulang || '-'}</td>
+                  <td className="py-2 px-4 border">{absen.jam_masuk || '-'}</td>
+                  <td className="py-2 px-4 border">{absen.jam_pulang || '-'}</td>
                   <td className="py-2 px-4 border">
-                    {absen.status}
+                    
                     <div className="flex space-x-2 mt-2">
                       <button
                         className="bg-green-500 text-white py-1 px-2 rounded hover:bg-green-700 transition"

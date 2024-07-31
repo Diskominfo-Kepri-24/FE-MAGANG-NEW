@@ -140,7 +140,7 @@ export default function PenilaianPembimbing() {
               </li>
               <li className="flex items-center p-2 hover:bg-gray-700">
                 <CogIcon className="h-6 w-6" />
-                <NavLink to="/pengaturan" activeclassname="text-blue-300" className="ml-4">
+                <NavLink to="/dashboard/pengaturan-pembimbing" activeclassname="text-blue-300" className="ml-4">
                   Pengaturan
                 </NavLink>
               </li>

@@ -30,8 +30,8 @@ export default function Login() {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/api/v1/magang/login",
-        loginData
+        `${import.meta.env.VITE_APP_LINK_API}/magang/login`,
+        loginData 
       );
 
       const { access_token, role } = response.data;
