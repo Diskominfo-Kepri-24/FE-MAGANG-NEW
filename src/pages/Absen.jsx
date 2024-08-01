@@ -1,13 +1,23 @@
-/* eslint-disable-next-line no-unused-vars */
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { HomeIcon, CalendarIcon, ClipboardDocumentIcon, DocumentTextIcon, StarIcon, ArrowLeftOnRectangleIcon, CogIcon, DocumentChartBarIcon, ClockIcon, UserIcon } from '@heroicons/react/24/outline';
+import {
+  HomeIcon,
+  CalendarIcon,
+  ClipboardDocumentIcon,
+  DocumentTextIcon,
+  StarIcon,
+  ArrowLeftOnRectangleIcon,
+  CogIcon,
+  DocumentChartBarIcon,
+  UserIcon
+} from '@heroicons/react/24/outline';
 
 export default function Absen() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [absenList, setAbsenList] = useState([]);
   const navigate = useNavigate();
   const role = localStorage.getItem("role");
+  const userId = localStorage.getItem("user_id");
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -16,32 +26,59 @@ export default function Absen() {
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    const fetchAbsenData = async () => {
+      const token = localStorage.getItem("access_token");
+      try {
+        const response = await fetch(`http://127.0.0.1:8000/api/v1/absen/${userId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        const result = await response.json();
+        console.log(result.absen); // Log the fetched absen data
+        if (response.ok) {
+          setAbsenList(result.absen);
+        } else {
+          console.error('Gagal mendapatkan data absensi:', result);
+          alert('Gagal mendapatkan data absensi.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan saat mendapatkan data absensi.');
+      }
+    };
+
+    fetchAbsenData();
+  }, [userId]);
+
   const handleLogout = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("role");
+    localStorage.removeItem("user_id");
     setTimeout(() => {
       navigate("/login");
       window.location.reload();
     }, 100);
   };
 
-  const handleAbsen = (type) => {
+  const handleAbsen = async (type) => {
     const now = new Date();
-    const formattedDate = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const formattedTime = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).replace(/\./g, ':');
-
+    
     const dayOfWeek = now.getDay();
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-
+  
     if (isWeekend) {
       alert('Absensi hanya dapat dilakukan dari hari Senin hingga hari Jumat.');
       return;
     }
-
+  
     const existingAbsenIndex = absenList.findIndex(absen => absen.tanggal === formattedDate);
-
-    if ((type === 'masuk' && now.getHours() >= 7 && now.getHours() <= 8) ||
-        (type === 'pulang' && now.getHours() >= 15 && now.getHours() <= 16)) {
+  
+    if ((type === 'masuk' && now.getHours() >= 7 && now.getHours() < 8) ||
+        (type === 'pulang' && now.getHours() >= 15 && now.getHours() < 16)) {
       if (existingAbsenIndex !== -1) {
         if (absenList[existingAbsenIndex][type]) {
           alert(`Anda sudah melakukan absen ${type} hari ini.`);
@@ -53,9 +90,50 @@ export default function Absen() {
       } else {
         setAbsenList([...absenList, { tanggal: formattedDate, [type]: formattedTime, status: 'Menunggu' }]);
       }
+  
+      const data = {
+        tanggal: formattedDate,
+        ...(type === 'masuk' ? { jam_masuk: formattedTime } : { jam_pulang: formattedTime })
+      };
+  
+      const token = localStorage.getItem("access_token");
+      console.log(data);
+      try {
+        const response = await fetch(`http://127.0.0.1:8000/api/v1/absen/jam-${type}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify(data),
+        });
+  
+        const result = await response.json();
+  
+        if (response.ok) {
+          console.log('Absensi berhasil:', result);
+          alert('Absensi berhasil dilakukan.');
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
+        } else {
+          console.error('Gagal melakukan absensi:', result);
+          alert('Gagal melakukan absensi. Silakan coba lagi.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan. Silakan coba lagi.');
+      }
     } else {
       alert('Absensi hanya dapat dilakukan pada jam yang ditentukan');
     }
+  };
+  
+  const formatDate = (dateStr) => {
+    const dateParts = dateStr.split('-');
+    if (dateParts.length !== 3) return dateStr;
+    const [year, month, day] = dateParts;
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
   };
 
   const getStatusBackgroundColor = (status) => {
@@ -71,19 +149,12 @@ export default function Absen() {
     }
   };
 
-  const formatDate = (dateStr) => {
-    const dateParts = dateStr.split('/');
-    if (dateParts.length !== 3) return dateStr; // jika format tidak sesuai, kembalikan string asli
-    const [day, month, year] = dateParts;
-    return `${day.padStart(2, '0')}-${month.padStart(2, '0')}-${year}`;
-  };
-
   return (
     <div className="flex h-screen">
       <aside className="fixed top-0 left-0 w-64 bg-gray-800 text-white h-screen overflow-y-auto flex flex-col">
         <div className="flex flex-col flex-1">
           <div className="p-4 flex flex-col items-center border-b border-gray-700">
-            < div className="w-24 h-24 flex items-center justify-center bg-white rounded-full mb-4">
+            <div className="w-24 h-24 flex items-center justify-center bg-white rounded-full mb-4">
               <UserIcon className="h-20 w-20 text-gray-800" />
             </div>
             <div className="text-center mb-4">
@@ -95,46 +166,46 @@ export default function Absen() {
             <ul>
               <li className="flex items-center p-2 hover:bg-gray-700">
                 <HomeIcon className="h-6 w-6" />
-                <NavLink to="/dashboard/mahasiswa" activeclassname="text-blue-300" className="ml-4">
+                <NavLink to="/dashboard/mahasiswa" activeClassName="text-blue-300" className="ml-4">
                   Beranda
                 </NavLink>
               </li>
               <li className="flex items-center p-2 hover:bg-gray-700">
                 <CalendarIcon className="h-6 w-6" />
-                <NavLink to="/dashboard/absen" activeclassname="text-blue-300" className="ml-4">
+                <NavLink to="/dashboard/absen" activeClassName="text-blue-300" className="ml-4">
                   Absen
                 </NavLink>
               </li>
               <li className="flex items-center p-2 hover:bg-gray-700">
                 <ClipboardDocumentIcon className="h-6 w-6" />
-                <NavLink to="/dashboard/kegiatan" activeclassname="text-blue-300" className="ml-4">
+                <NavLink to="/dashboard/kegiatan" activeClassName="text-blue-300" className="ml-4">
                   Kegiatan
                 </NavLink>
               </li>
               <li className="flex items-center p-2 hover:bg-gray-700">
                 <DocumentTextIcon className="h-6 w-6" />
-                <NavLink to="/dashboard/laporan" activeclassname="text-blue-300" className="ml-4">
+                <NavLink to="/dashboard/laporan" activeClassName="text-blue-300" className="ml-4">
                   Laporan
                 </NavLink>
               </li>
               <li className="flex items-center p-2 hover:bg-gray-700">
                 <StarIcon className="h-6 w-6" />
-                <NavLink to="/dashboard/penilaian" activeclassname="text-blue-300" className="ml-4">
+                <NavLink to="/dashboard/penilaian" activeClassName="text-blue-300" className="ml-4">
                   Penilaian
                 </NavLink>
               </li>
               <li className="flex items-center p-2 hover:bg-gray-700">
                 <DocumentChartBarIcon className="h-6 w-6" />
-                <NavLink to="/dashboard/riwayat" activeclassname="text-blue-300" className="ml-4">
+                <NavLink to="/dashboard/riwayat" activeClassName="text-blue-300" className="ml-4">
                   Riwayat
                 </NavLink>
               </li>
               <li className="flex items-center p-2 hover:bg-gray-700">
                 <CogIcon className="h-6 w-6" />
-                <NavLink to="/dashboard/pengaturan" activeclassname="text-blue-300" className="ml-4">
+                <NavLink to="/dashboard/pengaturan" activeClassName="text-blue-300" className="ml-4">
                   Pengaturan
                 </NavLink>
-              </li>
+                </li>
             </ul>
           </nav>
         </div>
@@ -145,6 +216,7 @@ export default function Absen() {
           </li>
         </div>
       </aside>
+
       <div className="flex flex-col flex-1 ml-64">
         <header className="bg-gray-800 text-white p-4 flex items-center">
           <img
@@ -159,46 +231,60 @@ export default function Absen() {
             </h3>
           </div>
         </header>
-        <main className="flex-1 p-6">
-          <h1 className="text-2xl font-bold mb-4">Absensi</h1>
-          <p className="mb-4 text-lg font-medium">
-            <span className="flex items-center">
-              <CalendarIcon className="h-5 w-5 mr-2 text-gray-600" />
-              {currentTime.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-            </span>
-            <span className="flex items-center">
-              <ClockIcon className="h-5 w-5 mr-2 text-gray-600" />
-              {currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).replace(/\./g, ':')}
-            </span>
-          </p>
-          <div className="flex space-x-4 mb-4">
-            <button className="bg-blue-950 text-white py-2 px-4 mr-2 rounded hover:bg-blue-700 transition" onClick={() => handleAbsen('masuk')}>Absen Masuk</button>
-            <button className="bg-blue-950 text-white py-2 px-4 rounded hover:bg-blue-700 transition" onClick={() => handleAbsen('pulang')}>Absen Pulang</button>
+        
+        <div className="flex flex-col flex-1 p-6 overflow-y-auto">
+          <div className="text-center w-full max-w-screen-lg mx-auto">
+            <h1 className="text-2xl font-bold mb-6">ABSENSI</h1>
+            <div className="flex flex-col items-center mb-6">
+              <div className="text-lg font-semibold mb-4">
+              {currentTime.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </div>
+            <div className="text-4xl font-bold mb-4">
+              {currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </div>
+            <div className="flex space-x-4 mb-6">
+              <button
+                className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
+                onClick={() => handleAbsen('masuk')}
+              >
+                Absen Masuk
+              </button>
+              <button
+                className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
+                onClick={() => handleAbsen('pulang')}
+              >
+                Absen Pulang
+              </button>
+            </div>
           </div>
-          <table className="mt-4 w-full border border-gray-300 rounded-md">
-            <thead className="bg-gray-700 text-white">
-              <tr>
-                <th className="border px-4 py-2">No</th>
-                <th className="border px-4 py-2">Tanggal</th>
-                <th className="border px-4 py-2">Jam Masuk</th>
-                <th className="border px-4 py-2">Jam Pulang</th>
-                <th className="border px-4 py-2">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {absenList.map((absen, index) => (
-                <tr key={index} className="bg-gray-100 hover:bg-gray-200">
-                  <td className="border px-4 py-2 text-center">{index + 1}</td>
-                  <td className="border px-4 py-2 text-center">{formatDate(absen.tanggal)}</td>
-                  <td className="border px-4 py-2 text-center">{absen.masuk || '-'}</td>
-                  <td className="border px-4 py-2 text-center">{absen.pulang || '-'}</td>
-                  <td className={`border px-4 py-2 text-center ${getStatusBackgroundColor(absen.status)}`}>{absen.status}</td>
+
+          <div className="w-full overflow-x-auto">
+            <table className="w-full min-w-full border border-gray-300 rounded-md">
+              <thead className="bg-gray-700 text-white">
+                <tr>
+                  <th className="border px-4 py-2">No</th>
+                  <th className="border px-4 py-2">Tanggal</th>
+                  <th className="border px-4 py-2">Jam Masuk</th>
+                  <th className="border px-4 py-2">Jam Pulang</th>
+                  <th className="border px-4 py-2">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </main>
+              </thead>
+              <tbody>
+                {absenList.map((absen, index) => (
+                  <tr key={index}>
+                    <td className="border px-4 py-2 text-center">{index + 1}</td>
+                    <td className="border p-2">{formatDate(absen.tanggal)}</td>
+                    <td className="border p-2">{absen.jam_masuk || '-'}</td>
+                    <td className="border p-2">{absen.jam_pulang || '-'}</td>
+                    <td className={`border p-2 ${getStatusBackgroundColor(absen.status)}`}>{absen.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
-  );
+  </div>
+);
 }

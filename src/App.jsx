@@ -8,6 +8,7 @@ import Riwayat from './pages/Riwayat';
 import Pengaturan from './pages/Pengaturan';
 import DataPeserta from './pages/DataPeserta';
 import LihatAbsen from './pages/LihatAbsen';
+import KegiatanPembimbing from './pages/KegiatanPembimbing';
 import LaporanPembimbing from './pages/LaporanPembimbing';
 import PenilaianPembimbing from './pages/PenilaianPembimbing';
 import PengaturanPembimbing from './pages/PengaturanPembimbing';
@@ -107,6 +108,15 @@ function App() {
         element={
           <ProtectedRoute role="pembimbing">
             <LihatAbsen />
+          </ProtectedRoute>
+        }
+      >
+      </Route>
+      <Route
+        path="/dashboard/kegiatan-pembimbing"
+        element={
+          <ProtectedRoute role="pembimbing">
+            <KegiatanPembimbing />
           </ProtectedRoute>
         }
       >

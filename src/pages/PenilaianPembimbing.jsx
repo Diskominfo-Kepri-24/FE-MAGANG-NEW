@@ -9,6 +9,7 @@ import {
   StarIcon,
   ArrowLeftOnRectangleIcon,
   CogIcon,
+  CalendarIcon
 } from '@heroicons/react/24/outline';
 
 function Navbar() {
@@ -121,9 +122,15 @@ export default function PenilaianPembimbing() {
                 </NavLink>
               </li>
               <li className="flex items-center p-2 hover:bg-gray-700">
-                <ClipboardDocumentIcon className="h-6 w-6" />
-                <NavLink to="/dashboard/lihat-absen" activeclassname="text-blue-300" className="ml-4">
-                  Lihat Absen dan Catatan
+                <NavLink to="/dashboard/laporan-pembimbing" className="flex items-center text-white hover:text-blue-300">
+                  <CalendarIcon className="h-6 w-6" />
+                  <span className="ml-4">Lihat Absen</span>
+                </NavLink>
+              </li>
+              <li className="flex items-center p-2 hover:bg-gray-700">
+                <NavLink to="/dashboard/laporan-pembimbing" className="flex items-center text-white hover:text-blue-300">
+                  <ClipboardDocumentIcon className="h-6 w-6" />
+                  <span className="ml-4">Lihat Catatan</span>
                 </NavLink>
               </li>
               <li className="flex items-center p-2 hover:bg-gray-700">

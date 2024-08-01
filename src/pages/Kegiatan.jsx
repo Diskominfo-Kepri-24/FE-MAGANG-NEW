@@ -1,7 +1,17 @@
-/* eslint-disable-next-line no-unused-vars */
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { HomeIcon, CalendarIcon, ClipboardDocumentIcon, DocumentTextIcon, StarIcon, ArrowLeftOnRectangleIcon, CogIcon, DocumentChartBarIcon, UserIcon } from '@heroicons/react/24/outline';
+import axios from 'axios';
+import {
+  HomeIcon,
+  CalendarIcon,
+  ClipboardDocumentIcon,
+  DocumentTextIcon,
+  StarIcon,
+  ArrowLeftOnRectangleIcon,
+  CogIcon,
+  DocumentChartBarIcon,
+  UserIcon
+} from '@heroicons/react/24/outline';
 
 export default function Kegiatan() {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -10,6 +20,8 @@ export default function Kegiatan() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const navigate = useNavigate();
   const role = localStorage.getItem("role");
+  const userId = localStorage.getItem("user_id");
+  const apiUrl = `${process.env.VITE_APP_LINK_API}/kegiatan`;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -19,23 +31,37 @@ export default function Kegiatan() {
   }, []);
 
   useEffect(() => {
-    const today = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    const existingActivity = activityList.find(activity => activity.tanggal === today);
-    setIsSubmitted(!!existingActivity);
-  }, [activityList]);
+    const fetchActivityData = async () => {
+      const token = localStorage.getItem("access_token");
+      try {
+        const response = await axios.get(apiUrl, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        setActivityList(response.data);
+      } catch (error) {
+        console.error('Error fetching activities:', error.response ? error.response.data : error.message);
+        alert('Gagal mendapatkan data kegiatan.');
+      }
+    };
+
+    fetchActivityData();
+  }, [apiUrl]);
 
   const handleLogout = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("role");
+    localStorage.removeItem("user_id");
     setTimeout(() => {
       navigate("/login");
       window.location.reload();
     }, 100);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const now = new Date();
-    const formattedDate = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
     if (isSubmitted) {
       alert('Catatan kegiatan untuk hari ini sudah disubmit.');
@@ -43,13 +69,27 @@ export default function Kegiatan() {
     }
 
     const newActivity = {
+      user_id: userId,
       tanggal: formattedDate,
       catatan: activity,
       status: 'Menunggu'
     };
 
-    setActivityList([...activityList, newActivity]);
-    setActivity('');
+    const token = localStorage.getItem("access_token");
+    try {
+      const response = await axios.post(apiUrl, newActivity, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      setActivityList([...activityList, response.data]);
+      setActivity('');
+      setIsSubmitted(true);
+    } catch (error) {
+      console.error('Error submitting activity', error.response ? error.response.data : error.message);
+      alert('Gagal menambahkan kegiatan. Silakan coba lagi.');
+    }
   };
 
   const getStatusBackgroundColor = (status) => {
@@ -70,7 +110,7 @@ export default function Kegiatan() {
       <aside className="fixed top-0 left-0 w-64 bg-gray-800 text-white h-screen overflow-y-auto flex flex-col">
         <div className="flex flex-col flex-1">
           <div className="p-4 flex flex-col items-center border-b border-gray-700">
-            < div className="w-24 h-24 flex items-center justify-center bg-white rounded-full mb-4">
+            <div className="w-24 h-24 flex items-center justify-center bg-white rounded-full mb-4">
               <UserIcon className="h-20 w-20 text-gray-800" />
             </div>
             <div className="text-center mb-4">
@@ -132,6 +172,7 @@ export default function Kegiatan() {
           </li>
         </div>
       </aside>
+
       <div className="flex flex-col flex-1 ml-64">
         <header className="bg-gray-800 text-white p-4 flex items-center">
           <img
@@ -146,49 +187,57 @@ export default function Kegiatan() {
             </h3>
           </div>
         </header>
-        <main className="flex-1 p-6">
-          <h1 className="text-2xl font-bold mb-4">Kegiatan Harian</h1>
-          <p className="mb-4 text-lg font-medium">
-            <span className="flex items-center">
-              <CalendarIcon className="h-5 w-5 mr-2 text-gray-600" />
-              {currentTime.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-            </span>
-          </p>
-          <textarea
-            className="w-full h-64 p-2 border mb-4 rounded-md shadow-sm"
-            placeholder="Catatan kegiatan..."
-            value={activity}
-            onChange={(e) => setActivity(e.target.value)}
-            disabled={isSubmitted}
-          ></textarea>
-          <button
-            className={`bg-blue-950 text-white py-2 px-4 mb-4 rounded-md shadow-sm ${isSubmitted ? 'bg-gray-500 cursor-not-allowed' : ''}`}
-            onClick={handleSubmit}
-            disabled={isSubmitted}
-          >
-            {isSubmitted ? 'Sudah Disubmit' : 'Submit'}
-          </button>
-          <table className="mt-4 w-full border border-gray-300 rounded-md">
-            <thead className="bg-gray-700 text-white">
-              <tr>
-                <th className="border px-4 py-2">No</th>
-                <th className="border px-4 py-2">Tanggal</th>
-                <th className="border px-4 py-2">Catatan Kegiatan</th>
-                <th className="border px-4 py-2">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {activityList.map((activity, index) => (
-                <tr key={index} className="bg-gray-100 hover:bg-gray-200">
-                  <td className="border px-4 py-2 text-center">{index + 1}</td>
-                  <td className="border px-4 py-2 text-center">{activity.tanggal}</td>
-                  <td className="border px-4 py-2">{activity.catatan}</td>
-                  <td className={`border px-4 py-2 text-center ${getStatusBackgroundColor(activity.status)}`}>{activity.status}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </main>
+
+        <div className="flex flex-col flex-1 p-6 overflow-y-auto">
+          <div className="text-center w-full max-w-screen-lg mx-auto">
+            <h1 className="text-2xl font-bold mb-6">KEGIATAN</h1>
+            <div className="flex flex-col items-center mb-6">
+              <div className="text-lg font-semibold mb-4">
+                {currentTime.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              </div>
+              <div className="text-4xl font-bold mb-4">
+                {currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </div>
+              <textarea
+                className="w-full h-64 p-2 border mb-4 rounded-md shadow-sm"
+                placeholder="Catatan kegiatan..."
+                value={activity}
+                onChange={(e) => setActivity(e.target.value)}
+                disabled={isSubmitted}
+              ></textarea>
+              <button
+                className={`bg-blue-950 text-white py-2 px-4 mb-4 rounded-md shadow-sm ${isSubmitted ? 'bg-gray-500 cursor-not-allowed' : ''}`}
+                onClick={handleSubmit}
+                disabled={isSubmitted}
+              >
+                {isSubmitted ? 'Sudah Disubmit' : 'Submit'}
+              </button>
+            </div>
+
+            <div className="w-full overflow-x-auto">
+              <table className="w-full min-w-full border border-gray-300 rounded-md">
+                <thead className="bg-gray-700 text-white">
+                  <tr>
+                    <th className="border px-4 py-2">No</th>
+                    <th className="border px-4 py-2">Tanggal</th>
+                    <th className="border px-4 py-2">Catatan Kegiatan</th>
+                    <th className="border px-4 py-2">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activityList.map((activity, index) => (
+                    <tr key={index}>
+                      <td className="border px-4 py-2 text-center">{index + 1}</td>
+                      <td className="border p-2">{activity.tanggal}</td>
+                      <td className="border p-2">{activity.catatan}</td>
+                      <td className={`border p-2 ${getStatusBackgroundColor(activity.status)}`}>{activity.status}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

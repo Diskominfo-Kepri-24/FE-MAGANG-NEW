@@ -34,11 +34,12 @@ export default function Login() {
         loginData 
       );
 
-      const { access_token, role } = response.data;
+      const { access_token, role,user_id } = response.data;
 
       // Save access token to local storage
       localStorage.setItem("access_token", access_token);
       localStorage.setItem("role", role);
+      localStorage.setItem("user_id", user_id);
 
       // Redirect based on role
       if (role === "mahasiswa") {
