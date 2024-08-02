@@ -1,6 +1,5 @@
 /* eslint-disable-next-line no-unused-vars */
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useCallback } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   HomeIcon,
@@ -11,64 +10,120 @@ import {
   ArrowLeftOnRectangleIcon,
   CogIcon,
   CalendarIcon,
-  DocumentChartBarIcon
 } from '@heroicons/react/24/outline';
 
+const BASE_API_URL = 'http://127.0.0.1:8000/api/v1';
+
 export default function KegiatanPembimbing() {
-  const navigate = useNavigate();
-  const role = localStorage.getItem('role');
   const [activities, setActivities] = useState([]);
-  const apiUrl = process.env.VITE_APP_LINK_API + '/kegiatan';
+  const navigate = useNavigate();
+  const role = localStorage.getItem("role");
+  const token = localStorage.getItem("access_token");
+
+  const fetchData = useCallback(async () => {
+    try {
+      const apiUrl = `${BASE_API_URL}/kegiatan`;
+      const response = await fetch(apiUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Unauthorized: Please check your token');
+        }
+        throw new Error('Error fetching activities');
+      }
+
+      const data = await response.json();
+      setActivities(data); // Simpan data di state
+    } catch (error) {
+      console.error(error.message); // Menangani error jika ada
+    }
+  }, [token]);
 
   useEffect(() => {
-    axios.get(apiUrl, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('access_token')}`
-      }
-    })
-      .then(response => {
-        setActivities(response.data);
-      })
-      .catch(error => {
-        console.error('Error fetching activities', error);
-      });
-  }, [apiUrl]);
+    fetchData();
+  }, [fetchData]);
 
   const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("role");
-    setTimeout(() => {
-      navigate('/login');
-      window.location.reload();
-    }, 100);
-  };
-
-  const handleConfirm = (id) => {
-    axios.post(`${apiUrl}/${id}/confirm`, {}, {
+    fetch(`${BASE_API_URL}/logout`, {
+      method: 'DELETE',
       headers: {
-        Authorization: `Bearer ${localStorage.getItem('access_token')}`
+        Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+        'Content-Type': 'application/json'
       }
     })
       .then(response => {
-        setActivities(activities.map(activity => activity.id === id ? response.data : activity));
+        if (response.ok) {
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("role");
+          setTimeout(() => {
+            navigate("/login");
+            window.location.reload();
+          }, 100);
+        } else {
+          console.error('Logout gagal');
+        }
       })
       .catch(error => {
-        console.error('Error confirming activity', error);
+        console.error('Terjadi kesalahan:', error);
       });
   };
 
-  const handleReject = (id) => {
-    axios.post(`${apiUrl}/${id}/reject`, {}, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('access_token')}`
+  const handleConfirm = async (id) => {
+    if (window.confirm('Apakah Anda yakin ingin mengkonfirmasi kegiatan ini?')) {
+      try {
+        const apiUrl = `${BASE_API_URL}/kegiatan/${id}/confirm`;
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error('Unauthorized: Please check your token');
+          }
+          throw new Error('Error confirming activity');
+        }
+
+        const data = await response.json();
+        setActivities(activities.map(activity => activity.id === id ? data : activity));
+      } catch (error) {
+        console.error('Error confirming activity', error.message);
       }
-    })
-      .then(response => {
-        setActivities(activities.map(activity => activity.id === id ? response.data : activity));
-      })
-      .catch(error => {
-        console.error('Error rejecting activity', error);
-      });
+    }
+  };
+
+  const handleReject = async (id) => {
+    if (window.confirm('Apakah Anda yakin ingin menolak kegiatan ini?')) {
+      try {
+        const apiUrl = `${BASE_API_URL}/kegiatan/${id}/reject`;
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error('Unauthorized: Please check your token');
+          }
+          throw new Error('Error rejecting activity');
+        }
+
+        const data = await response.json();
+        setActivities(activities.map(activity => activity.id === id ? data : activity));
+      } catch (error) {
+        console.error('Error rejecting activity', error.message);
+      }
+    }
   };
 
   const getStatusBackgroundColor = (status) => {
@@ -100,66 +155,45 @@ export default function KegiatanPembimbing() {
           <nav className="mt-4 flex-1">
             <ul>
               <li className="flex items-center p-2 hover:bg-gray-700">
-                <HomeIcon className="h-6 w-6" />
-                <NavLink
-                  to="/dashboard/mahasiswa"
-                  className={({ isActive }) => `ml-4 ${isActive ? 'text-blue-300' : 'text-white'}`}
-                >
-                  Beranda
+                <NavLink to="/dashboard/pembimbing" className="flex items-center text-white hover:text-blue-300">
+                  <HomeIcon className="h-6 w-6" />
+                  <span className="ml-4">Beranda</span>
                 </NavLink>
               </li>
               <li className="flex items-center p-2 hover:bg-gray-700">
-                <CalendarIcon className="h-6 w-6" />
-                <NavLink
-                  to="/dashboard/absen"
-                  className={({ isActive }) => `ml-4 ${isActive ? 'text-blue-300' : 'text-white'}`}
-                >
-                  Absen
+                <NavLink to="/dashboard/data-peserta" className="flex items-center text-white hover:text-blue-300">
+                  <UserIcon className="h-6 w-6" />
+                  <span className="ml-4">Data Peserta</span>
                 </NavLink>
               </li>
               <li className="flex items-center p-2 hover:bg-gray-700">
-                <ClipboardDocumentIcon className="h-6 w-6" />
-                <NavLink
-                  to="/dashboard/kegiatan"
-                  className={({ isActive }) => `ml-4 ${isActive ? 'text-blue-300' : 'text-white'}`}
-                >
-                  Kegiatan
+                <NavLink to="/dashboard/laporan-pembimbing" className="flex items-center text-white hover:text-blue-300">
+                  <CalendarIcon className="h-6 w-6" />
+                  <span className="ml-4">Lihat Absen</span>
                 </NavLink>
               </li>
               <li className="flex items-center p-2 hover:bg-gray-700">
-                <DocumentTextIcon className="h-6 w-6" />
-                <NavLink
-                  to="/dashboard/laporan"
-                  className={({ isActive }) => `ml-4 ${isActive ? 'text-blue-300' : 'text-white'}`}
-                >
-                  Laporan
+                <NavLink to="/dashboard/kegiatan-pembimbing" className="flex items-center text-white hover:text-blue-300">
+                  <ClipboardDocumentIcon className="h-6 w-6" />
+                  <span className="ml-4">Lihat Catatan</span>
                 </NavLink>
               </li>
               <li className="flex items-center p-2 hover:bg-gray-700">
-                <StarIcon className="h-6 w-6" />
-                <NavLink
-                  to="/dashboard/penilaian"
-                  className={({ isActive }) => `ml-4 ${isActive ? 'text-blue-300' : 'text-white'}`}
-                >
-                  Penilaian
+                <NavLink to="/dashboard/laporan-pembimbing" className="flex items-center text-white hover:text-blue-300">
+                  <DocumentTextIcon className="h-6 w-6" />
+                  <span className="ml-4">Data Laporan</span>
                 </NavLink>
               </li>
               <li className="flex items-center p-2 hover:bg-gray-700">
-                <DocumentChartBarIcon className="h-6 w-6" />
-                <NavLink
-                  to="/dashboard/riwayat"
-                  className={({ isActive }) => `ml-4 ${isActive ? 'text-blue-300' : 'text-white'}`}
-                >
-                  Riwayat
+                <NavLink to="/dashboard/penilaian-pembimbing" className="flex items-center text-white hover:text-blue-300">
+                  <StarIcon className="h-6 w-6" />
+                  <span className="ml-4">Penilaian</span>
                 </NavLink>
               </li>
               <li className="flex items-center p-2 hover:bg-gray-700">
-                <CogIcon className="h-6 w-6" />
-                <NavLink
-                  to="/dashboard/pengaturan"
-                  className={({ isActive }) => `ml-4 ${isActive ? 'text-blue-300' : 'text-white'}`}
-                >
-                  Pengaturan
+                <NavLink to="/dashboard/pengaturan-pembimbing" className="flex items-center text-white hover:text-blue-300">
+                  <CogIcon className="h-6 w-6" />
+                  <span className="ml-4">Pengaturan</span>
                 </NavLink>
               </li>
             </ul>
@@ -209,8 +243,18 @@ export default function KegiatanPembimbing() {
                   <td className="border px-4 py-2">{activity.catatan}</td>
                   <td className={`border px-4 py-2 text-center ${getStatusBackgroundColor(activity.status)}`}>{activity.status}</td>
                   <td className="border px-4 py-2 text-center">
-                    <button onClick={() => handleConfirm(activity.id)} className="bg-green-500 text-white py-1 px-2 rounded mr-2">Konfirmasi</button>
-                    <button onClick={() => handleReject(activity.id)} className="bg-red-500 text-white py-1 px-2 rounded">Tolak</button>
+                    <button
+                      onClick={() => handleConfirm(activity.id)}
+                      className="bg-green-500 text-white py-2 px-4 rounded mr-2 touchable"
+                    >
+                      Konfirmasi
+                    </button>
+                    <button
+                      onClick={() => handleReject(activity.id)}
+                      className="bg-red-500 text-white py-2 px-4 rounded touchable"
+                    >
+                      Tolak
+                    </button>
                   </td>
                 </tr>
               ))}

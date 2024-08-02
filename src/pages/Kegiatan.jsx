@@ -21,7 +21,7 @@ export default function Kegiatan() {
   const navigate = useNavigate();
   const role = localStorage.getItem("role");
   const userId = localStorage.getItem("user_id");
-  const apiUrl = `${process.env.VITE_APP_LINK_API}/kegiatan`;
+  const apiUrl = `${import.meta.env.VITE_APP_LINK_API}/kegiatan`;
 
   useEffect(() => {
     const timer = setInterval(() => {

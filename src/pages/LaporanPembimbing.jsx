@@ -38,8 +38,24 @@ export default function LaporanPembimbing() {
 
   useEffect(() => {
     // Fetch data laporan
-    // Contoh fetch data dari API atau server
-    // setLaporanList(dataDariServer);
+    const fetchData = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/v1/laporan', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          }
+        });
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        setLaporanList(data);
+      } catch (error) {
+        console.error('There was a problem with the fetch operation:', error);
+      }
+    };
+    
+    fetchData();
   }, []);
 
   const filteredLaporanList = laporanList.filter((laporan) =>

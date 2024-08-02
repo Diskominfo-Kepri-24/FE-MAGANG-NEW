@@ -1,7 +1,17 @@
 /* eslint-disable-next-line no-unused-vars */
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { HomeIcon, CalendarIcon, ClipboardDocumentIcon, DocumentTextIcon, StarIcon, ArrowLeftOnRectangleIcon, CogIcon, DocumentChartBarIcon, UserIcon } from '@heroicons/react/24/outline';
+import {
+  HomeIcon,
+  CalendarIcon,
+  ClipboardDocumentIcon,
+  DocumentTextIcon,
+  StarIcon,
+  ArrowLeftOnRectangleIcon,
+  CogIcon,
+  DocumentChartBarIcon,
+  UserIcon
+} from '@heroicons/react/24/outline';
 
 export default function Laporan() {
   const [link, setLink] = useState('');
@@ -17,12 +27,38 @@ export default function Laporan() {
     }, 100);
   };
 
+  const handleSubmit = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/v1/laporan', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem("access_token")}`,
+        },
+        body: JSON.stringify({ link }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Laporan submitted successfully:', result);
+        // Optionally, navigate to another page or show a success message
+      } else {
+        const errorText = await response.text();  // Read the error message from the response
+        console.error('Failed to submit laporan:', response.status, errorText);
+        // Handle error response
+      }
+    } catch (error) {
+      console.error('Error submitting laporan:', error);
+      // Handle error
+    }
+  };
+
   return (
     <div className="flex h-screen">
       <aside className="fixed top-0 left-0 w-64 bg-gray-800 text-white h-screen overflow-y-auto flex flex-col">
         <div className="flex flex-col flex-1">
           <div className="p-4 flex flex-col items-center border-b border-gray-700">
-           < div className="w-24 h-24 flex items-center justify-center bg-white rounded-full mb-4">
+            <div className="w-24 h-24 flex items-center justify-center bg-white rounded-full mb-4">
               <UserIcon className="h-20 w-20 text-gray-800" />
             </div>
             <div className="text-center mb-4">
@@ -107,7 +143,12 @@ export default function Laporan() {
             value={link}
             onChange={(e) => setLink(e.target.value)}
           />
-          <button className="bg-blue-950 text-white py-2 px-4 rounded-md">Submit</button>
+          <button
+            className="bg-blue-950 text-white py-2 px-4 rounded-md"
+            onClick={handleSubmit}
+          >
+            Submit
+          </button>
         </main>
       </div>
     </div>

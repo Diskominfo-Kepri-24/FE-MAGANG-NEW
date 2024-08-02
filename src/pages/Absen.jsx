@@ -11,13 +11,16 @@ import {
   DocumentChartBarIcon,
   UserIcon
 } from '@heroicons/react/24/outline';
+import axios from 'axios';
+import PropTypes from 'prop-types';
 
 export default function Absen() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [absenList, setAbsenList] = useState([]);
+  const [data, setData] = useState([]);
   const navigate = useNavigate();
   const role = localStorage.getItem("role");
-  const userId = localStorage.getItem("user_id");
+  const token = localStorage.getItem("access_token");
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -27,58 +30,84 @@ export default function Absen() {
   }, []);
 
   useEffect(() => {
-    const fetchAbsenData = async () => {
-      const token = localStorage.getItem("access_token");
+    async function fetchData() {
       try {
-        const response = await fetch(`http://127.0.0.1:8000/api/v1/absen/${userId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-        const result = await response.json();
-        console.log(result.absen); // Log the fetched absen data
-        if (response.ok) {
-          setAbsenList(result.absen);
-        } else {
-          console.error('Gagal mendapatkan data absensi:', result);
-          alert('Gagal mendapatkan data absensi.');
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        alert('Terjadi kesalahan saat mendapatkan data absensi.');
-      }
-    };
+        const response = await axios.get(
+          `${import.meta.env.VITE_APP_LINK_API}/absen/magang`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
 
-    fetchAbsenData();
-  }, [userId]);
+        const userData = response.data.user;
+
+        const result = userData.map(item => ({
+          tanggal: item.tanggal,
+          jam_masuk: item.jam_masuk,
+          jam_pulang: item.jam_pulang,
+          status: item.status,
+          hari: item.hari
+        }));
+
+        setData(result); // Simpan data di state
+      } catch (error) {
+        console.error(error); // Menangani error jika ada
+      }
+    }
+
+    fetchData();
+  }, [token]);
 
   const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("role");
-    localStorage.removeItem("user_id");
-    setTimeout(() => {
-      navigate("/login");
-      window.location.reload();
-    }, 100);
+    fetch('/api/v1/logout', {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(response => {
+        if (response.ok) {
+          // Hapus data dari localStorage setelah logout berhasil
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("role");
+          localStorage.removeItem("user_id");
+
+          // Redirect user setelah logout
+          setTimeout(() => {
+            navigate("/login");
+            window.location.reload();
+          }, 100);
+        } else {
+          // Tangani error jika logout tidak berhasil
+          console.error('Logout gagal');
+        }
+      })
+      .catch(error => {
+        // Tangani error network atau lainnya
+        console.error('Terjadi kesalahan:', error);
+      });
   };
 
   const handleAbsen = async (type) => {
     const now = new Date();
     const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const formattedTime = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).replace(/\./g, ':');
-    
+
     const dayOfWeek = now.getDay();
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-  
+
     if (isWeekend) {
       alert('Absensi hanya dapat dilakukan dari hari Senin hingga hari Jumat.');
       return;
     }
-  
+
     const existingAbsenIndex = absenList.findIndex(absen => absen.tanggal === formattedDate);
-  
+
     if ((type === 'masuk' && now.getHours() >= 7 && now.getHours() < 8) ||
-        (type === 'pulang' && now.getHours() >= 15 && now.getHours() < 16)) {
+      (type === 'pulang' && now.getHours() >= 15 && now.getHours() < 16)) {
       if (existingAbsenIndex !== -1) {
         if (absenList[existingAbsenIndex][type]) {
           alert(`Anda sudah melakukan absen ${type} hari ini.`);
@@ -90,12 +119,12 @@ export default function Absen() {
       } else {
         setAbsenList([...absenList, { tanggal: formattedDate, [type]: formattedTime, status: 'Menunggu' }]);
       }
-  
+
       const data = {
         tanggal: formattedDate,
         ...(type === 'masuk' ? { jam_masuk: formattedTime } : { jam_pulang: formattedTime })
       };
-  
+
       const token = localStorage.getItem("access_token");
       console.log(data);
       try {
@@ -107,9 +136,9 @@ export default function Absen() {
           },
           body: JSON.stringify(data),
         });
-  
+
         const result = await response.json();
-  
+
         if (response.ok) {
           console.log('Absensi berhasil:', result);
           alert('Absensi berhasil dilakukan.');
@@ -126,26 +155,6 @@ export default function Absen() {
       }
     } else {
       alert('Absensi hanya dapat dilakukan pada jam yang ditentukan');
-    }
-  };
-  
-  const formatDate = (dateStr) => {
-    const dateParts = dateStr.split('-');
-    if (dateParts.length !== 3) return dateStr;
-    const [year, month, day] = dateParts;
-    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-  };
-
-  const getStatusBackgroundColor = (status) => {
-    switch (status) {
-      case 'Menunggu':
-        return 'bg-yellow-200 text-yellow-800';
-      case 'Dikonfirmasi':
-        return 'bg-green-200 text-green-800';
-      case 'Ditolak':
-        return 'bg-red-200 text-red-800';
-      default:
-        return '';
     }
   };
 
@@ -205,7 +214,7 @@ export default function Absen() {
                 <NavLink to="/dashboard/pengaturan" activeClassName="text-blue-300" className="ml-4">
                   Pengaturan
                 </NavLink>
-                </li>
+              </li>
             </ul>
           </nav>
         </div>
@@ -231,60 +240,91 @@ export default function Absen() {
             </h3>
           </div>
         </header>
-        
+
         <div className="flex flex-col flex-1 p-6 overflow-y-auto">
           <div className="text-center w-full max-w-screen-lg mx-auto">
             <h1 className="text-2xl font-bold mb-6">ABSENSI</h1>
             <div className="flex flex-col items-center mb-6">
               <div className="text-lg font-semibold mb-4">
-              {currentTime.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                {currentTime.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              </div>
+              <div className="text-4xl font-bold mb-4">
+                {currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </div>
+              <div className="flex space-x-4 mb-6">
+                <button
+                  className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
+                  onClick={() => handleAbsen('masuk')}
+                >
+                  Absen Masuk
+                </button>
+                <button
+                  className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
+                  onClick={() => handleAbsen('pulang')}
+                >
+                  Absen Pulang
+                </button>
+              </div>
             </div>
-            <div className="text-4xl font-bold mb-4">
-              {currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-            </div>
-            <div className="flex space-x-4 mb-6">
-              <button
-                className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
-                onClick={() => handleAbsen('masuk')}
-              >
-                Absen Masuk
-              </button>
-              <button
-                className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
-                onClick={() => handleAbsen('pulang')}
-              >
-                Absen Pulang
-              </button>
-            </div>
-          </div>
 
-          <div className="w-full overflow-x-auto">
-            <table className="w-full min-w-full border border-gray-300 rounded-md">
-              <thead className="bg-gray-700 text-white">
-                <tr>
-                  <th className="border px-4 py-2">No</th>
-                  <th className="border px-4 py-2">Tanggal</th>
-                  <th className="border px-4 py-2">Jam Masuk</th>
-                  <th className="border px-4 py-2">Jam Pulang</th>
-                  <th className="border px-4 py-2">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {absenList.map((absen, index) => (
-                  <tr key={index}>
-                    <td className="border px-4 py-2 text-center">{index + 1}</td>
-                    <td className="border p-2">{formatDate(absen.tanggal)}</td>
-                    <td className="border p-2">{absen.jam_masuk || '-'}</td>
-                    <td className="border p-2">{absen.jam_pulang || '-'}</td>
-                    <td className={`border p-2 ${getStatusBackgroundColor(absen.status)}`}>{absen.status}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="w-full overflow-x-auto">
+              <DataTable data={data} />
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
 }
+
+function DataTable({ data }) {
+  const getStatusBackgroundColor = (status) => {
+    switch (status) {
+      case 'menunggu':
+        return 'bg-yellow-200 text-yellow-800';
+      case 'dikonfirmasi':
+        return 'bg-green-200 text-green-800';
+      case 'ditolak':
+        return 'bg-red-200 text-red-800';
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <table className="mt-4 w-full border border-gray-300 rounded-md">
+      <thead className="bg-gray-700 text-white">
+        <tr>
+          <th className="border px-4 py-2">No</th>
+          <th className="border px-4 py-2">Tanggal</th>
+          <th className="border px-4 py-2">Jam Masuk</th>
+          <th className="border px-4 py-2">Jam Pulang</th>
+          <th className="border px-4 py-2">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {data.map((item, index) => (
+          <tr key={index} className="bg-gray-100 hover:bg-gray-200">
+            <td className="border px-4 py-2 text-center">{index + 1}</td>
+            <td className="border px-4 py-2 text-center">{item.hari}, {item.tanggal}</td>
+            <td className="border px-4 py-2 text-center">{item.jam_masuk}</td>
+            <td className="border px-4 py-2 text-center">{item.jam_pulang}</td>
+            <td className={`border p-2 ${getStatusBackgroundColor(item.status)}`}>{item.status}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+DataTable.propTypes = {
+  data: PropTypes.arrayOf(
+    PropTypes.shape({
+      tanggal: PropTypes.string.isRequired,
+      jam_masuk: PropTypes.string,
+      jam_pulang: PropTypes.string,
+      status: PropTypes.string.isRequired,
+      hari: PropTypes.string.isRequired
+    })
+  ).isRequired,
+};
