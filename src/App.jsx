@@ -8,9 +8,6 @@ import Riwayat from './pages/Riwayat';
 import Pengaturan from './pages/Pengaturan';
 import DataPeserta from './pages/DataPeserta';
 import LihatAbsen from './pages/LihatAbsen';
-import KegiatanPembimbing from './pages/KegiatanPembimbing';
-import LaporanPembimbing from './pages/LaporanPembimbing';
-import PenilaianPembimbing from './pages/PenilaianPembimbing';
 import PengaturanPembimbing from './pages/PengaturanPembimbing';
 import DashboardPembimbing from './components/DashboardPembimbing';
 import DashboardMahasiswa from './components/DashboardMahasiswa';
@@ -21,70 +18,62 @@ function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route
-        path="/dashboard/mahasiswa"
+        path="/dashboard/magang"
         element={
-          <ProtectedRoute role="mahasiswa">
+          <ProtectedRoute role="magang">
             <DashboardMahasiswa />
           </ProtectedRoute>
         }
-      >
-      </Route>
+      />
       <Route
         path="/dashboard/absen"
         element={
-          <ProtectedRoute role="mahasiswa">
+          <ProtectedRoute role="magang">
             <Absen />
           </ProtectedRoute>
         }
-      >
-      </Route>
+      />
       <Route
         path="/dashboard/kegiatan"
         element={
-          <ProtectedRoute role="mahasiswa">
+          <ProtectedRoute role="magang">
             <Kegiatan />
           </ProtectedRoute>
         }
-      >
-      </Route>
+      />
       <Route
         path="/dashboard/laporan"
         element={
-          <ProtectedRoute role="mahasiswa">
+          <ProtectedRoute role="magang">
             <Laporan />
           </ProtectedRoute>
         }
-      >
-      </Route>
+      />
       <Route
         path="/dashboard/penilaian"
         element={
-          <ProtectedRoute role="mahasiswa">
+          <ProtectedRoute role="magang">
             <Penilaian />
           </ProtectedRoute>
         }
-      >
-      </Route>
+      />
       <Route
         path="/dashboard/riwayat"
         element={
-          <ProtectedRoute role="mahasiswa">
+          <ProtectedRoute role="magang">
             <Riwayat />
           </ProtectedRoute>
         }
-      >
-      </Route>
+      />
       <Route
         path="/dashboard/pengaturan"
         element={
-          <ProtectedRoute role="mahasiswa">
+          <ProtectedRoute role="magang">
             <Pengaturan />
           </ProtectedRoute>
         }
-      >
-      </Route>
+      />
 
-      
       <Route
         path="/dashboard/pembimbing"
         element={
@@ -92,8 +81,7 @@ function App() {
             <DashboardPembimbing />
           </ProtectedRoute>
         }
-      >
-      </Route>
+      />
       <Route
         path="/dashboard/data-peserta"
         element={
@@ -101,8 +89,7 @@ function App() {
             <DataPeserta />
           </ProtectedRoute>
         }
-      >
-      </Route>
+      />
       <Route
         path="/dashboard/lihat-absen"
         element={
@@ -110,35 +97,7 @@ function App() {
             <LihatAbsen />
           </ProtectedRoute>
         }
-      >
-      </Route>
-      <Route
-        path="/dashboard/kegiatan-pembimbing"
-        element={
-          <ProtectedRoute role="pembimbing">
-            <KegiatanPembimbing />
-          </ProtectedRoute>
-        }
-      >
-      </Route>
-      <Route
-        path="/dashboard/laporan-pembimbing"
-        element={
-          <ProtectedRoute role="pembimbing">
-            <LaporanPembimbing />
-          </ProtectedRoute>
-        }
-      >
-      </Route>
-      <Route
-        path="/dashboard/penilaian-pembimbing"
-        element={
-          <ProtectedRoute role="pembimbing">
-            <PenilaianPembimbing />
-          </ProtectedRoute>
-        }
-      >
-      </Route>
+      />
       <Route
         path="/dashboard/pengaturan-pembimbing"
         element={
@@ -146,22 +105,7 @@ function App() {
             <PengaturanPembimbing />
           </ProtectedRoute>
         }
-      >
-      </Route>
-
-        {/* <Route path="beranda" element={<Beranda />} />
-        <Route path="absen" element={<Absen />} />
-        <Route path="kegiatan" element={<Kegiatan />} />
-        <Route path="laporan" element={<Laporan />} />
-        <Route path="penilaian" element={<Penilaian />} />
-        <Route path="riwayat" element={<Riwayat />} />
-        <Route path="pengaturan" element={<Pengaturan />} /> */}
-        {/* <Route path="beranda-pembimbing" element={<BerandaPembimbing />} />
-        <Route path="data-peserta" element={<DataPeserta />} />
-        <Route path="lihat-absen" element={<LihatAbsen />} />
-        <Route path="laporan-pembimbing" element={<LaporanPembimbing />} />
-        <Route path="penilaian-pembimbing" element={<PenilaianPembimbing />} />
-        <Route path="pengaturan" element={<Pengaturan />} /> */}
+      />
     </Routes>
   );
 }
