@@ -15,6 +15,8 @@ export default function Penilaian() {
   ];
   const navigate = useNavigate();
   const role = localStorage.getItem("role");
+  const name = localStorage.getItem("name");
+  console.log (name)
 
   const handleLogout = () => {
     localStorage.removeItem("access_token");
@@ -34,7 +36,7 @@ export default function Penilaian() {
               <UserIcon className="h-20 w-20 text-gray-800" />
             </div>
             <div className="text-center mb-4">
-              <p className="text-lg font-bold">User Name</p>
+              <p className="text-lg font-bold capitalize">{name}</p>
               <p className="text-sm text-gray-400 capitalize">{role}</p>
             </div>
           </div>
@@ -42,7 +44,7 @@ export default function Penilaian() {
             <ul>
               <li className="flex items-center p-2 hover:bg-gray-700">
                 <HomeIcon className="h-6 w-6" />
-                <NavLink to="/dashboard/mahasiswa" activeclassname="text-blue-300" className="ml-4">
+                <NavLink to="/dashboard/magang" activeclassname="text-blue-300" className="ml-4">
                   Beranda
                 </NavLink>
               </li>

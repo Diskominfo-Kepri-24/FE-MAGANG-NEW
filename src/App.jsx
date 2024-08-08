@@ -21,9 +21,9 @@ function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route
-        path="/dashboard/mahasiswa"
+        path="/dashboard/magang"
         element={
-          <ProtectedRoute role="mahasiswa">
+          <ProtectedRoute role="magang">
             <DashboardMahasiswa />
           </ProtectedRoute>
         }
@@ -32,7 +32,7 @@ function App() {
       <Route
         path="/dashboard/absen"
         element={
-          <ProtectedRoute role="mahasiswa">
+          <ProtectedRoute role="magang">
             <Absen />
           </ProtectedRoute>
         }
@@ -41,7 +41,7 @@ function App() {
       <Route
         path="/dashboard/kegiatan"
         element={
-          <ProtectedRoute role="mahasiswa">
+          <ProtectedRoute role="magang">
             <Kegiatan />
           </ProtectedRoute>
         }
@@ -50,7 +50,7 @@ function App() {
       <Route
         path="/dashboard/laporan"
         element={
-          <ProtectedRoute role="mahasiswa">
+          <ProtectedRoute role="magang">
             <Laporan />
           </ProtectedRoute>
         }
@@ -59,7 +59,7 @@ function App() {
       <Route
         path="/dashboard/penilaian"
         element={
-          <ProtectedRoute role="mahasiswa">
+          <ProtectedRoute role="magang">
             <Penilaian />
           </ProtectedRoute>
         }
@@ -68,7 +68,7 @@ function App() {
       <Route
         path="/dashboard/riwayat"
         element={
-          <ProtectedRoute role="mahasiswa">
+          <ProtectedRoute role="magang">
             <Riwayat />
           </ProtectedRoute>
         }
@@ -77,7 +77,7 @@ function App() {
       <Route
         path="/dashboard/pengaturan"
         element={
-          <ProtectedRoute role="mahasiswa">
+          <ProtectedRoute role="magang">
             <Pengaturan />
           </ProtectedRoute>
         }

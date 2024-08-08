@@ -13,8 +13,8 @@ export default function Login() {
     const token = localStorage.getItem("access_token");
     const role = localStorage.getItem("role");
     if (token && role) {
-      if (role === "mahasiswa") {
-        navigate("/dashboard/mahasiswa");
+      if (role === "magang") {
+        navigate("/dashboard/magang");
       } else if (role === "pembimbing") {
         navigate("/dashboard/pembimbing");
       }
@@ -34,16 +34,18 @@ export default function Login() {
         loginData 
       );
 
-      const { access_token, role,user_id } = response.data;
+      console.log (response);
+      const { access_token, role,user_id, name } = response.data;
 
       // Save access token to local storage
       localStorage.setItem("access_token", access_token);
       localStorage.setItem("role", role);
       localStorage.setItem("user_id", user_id);
+      localStorage.setItem("name", name);
 
       // Redirect based on role
-      if (role === "mahasiswa") {
-        navigate("/dashboard/mahasiswa");
+      if (role === "magang") {
+        navigate("/dashboard/magang");
       } else if (role === "pembimbing") {
         navigate("/dashboard/pembimbing");
       }

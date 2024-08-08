@@ -13,7 +13,7 @@ import {
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import PropTypes from 'prop-types';
-
+import { toast } from 'react-toastify'; 
 export default function Absen() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [absenList, setAbsenList] = useState([]);
@@ -21,6 +21,9 @@ export default function Absen() {
   const navigate = useNavigate();
   const role = localStorage.getItem("role");
   const token = localStorage.getItem("access_token");
+  const name = localStorage.getItem("name");
+  console.log (name)
+
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -53,7 +56,7 @@ export default function Absen() {
 
         setData(result); // Simpan data di state
       } catch (error) {
-        console.error(error); // Menangani error jika ada
+        toast.error('Gagal mengambil data. Silakan coba lagi.');
       }
     }
 
@@ -80,14 +83,17 @@ export default function Absen() {
             navigate("/login");
             window.location.reload();
           }, 100);
+          toast.success('Berhasil logout.');
         } else {
           // Tangani error jika logout tidak berhasil
           console.error('Logout gagal');
+          toast.error('Logout gagal.');
         }
       })
       .catch(error => {
         // Tangani error network atau lainnya
         console.error('Terjadi kesalahan:', error);
+        toast.error('Terjadi kesalahan saat logout.');
       });
   };
 
@@ -95,87 +101,91 @@ export default function Absen() {
     const now = new Date();
     const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const formattedTime = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).replace(/\./g, ':');
-
+  
     const dayOfWeek = now.getDay();
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-
+  
     if (isWeekend) {
-      alert('Absensi hanya dapat dilakukan dari hari Senin hingga hari Jumat.');
+      toast.error('Absensi hanya dapat dilakukan dari hari Senin hingga hari Jumat.');
       return;
     }
-
+  
     const existingAbsenIndex = absenList.findIndex(absen => absen.tanggal === formattedDate);
-
-    if ((type === 'masuk' && now.getHours() >= 7 && now.getHours() < 8) ||
-      (type === 'pulang' && now.getHours() >= 15 && now.getHours() < 16)) {
+  
+    if ((type === 'masuk' && now.getHours() >= 7 && now.getHours() <= 8) ||
+        (type === 'pulang' && now.getHours() >= 15 && now.getHours() < 16)) {
       if (existingAbsenIndex !== -1) {
-        if (absenList[existingAbsenIndex][type]) {
+        if (absenList[existingAbsenIndex][type === 'masuk' ? 'jam_masuk' : 'jam_pulang']) {
           alert(`Anda sudah melakukan absen ${type} hari ini.`);
         } else {
+          // Update the existing absen entry
           const updatedAbsenList = [...absenList];
-          updatedAbsenList[existingAbsenIndex][type] = formattedTime;
+          updatedAbsenList[existingAbsenIndex][type === 'masuk' ? 'jam_masuk' : 'jam_pulang'] = formattedTime;
           setAbsenList(updatedAbsenList);
         }
       } else {
-        setAbsenList([...absenList, { tanggal: formattedDate, [type]: formattedTime, status: 'Menunggu' }]);
+        // Add a new absen entry
+        const newAbsen = { 
+          tanggal: formattedDate, 
+          [type === 'masuk' ? 'jam_masuk' : 'jam_pulang']: formattedTime 
+        };
+        setAbsenList([...absenList, newAbsen]);
       }
-
-      const data = {
-        tanggal: formattedDate,
-        ...(type === 'masuk' ? { jam_masuk: formattedTime } : { jam_pulang: formattedTime })
-      };
-
-      const token = localStorage.getItem("access_token");
-      console.log(data);
+      
+      const token = localStorage.getItem('access_token'); // Get token from local storage
+      console.log('Token:', token); // Debug: check if token is retrieved properly
+  
       try {
-        const response = await fetch(`http://127.0.0.1:8000/api/v1/absen/jam-${type}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
+        const response = await axios.post(
+          `http://127.0.0.1:8000/api/v1/absen/jam-${type}`,
+          {
+            tanggal: formattedDate,
+            [type === 'masuk' ? 'jam_masuk' : 'jam_pulang']: formattedTime
           },
-          body: JSON.stringify(data),
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-          console.log('Absensi berhasil:', result);
-          alert('Absensi berhasil dilakukan.');
-          setTimeout(() => {
-            window.location.reload();
-          }, 500);
-        } else {
-          console.error('Gagal melakukan absensi:', result);
-          alert('Gagal melakukan absensi. Silakan coba lagi.');
-        }
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+        toast.success('Absen berhasil dikirim.');
+        setTimeout(() => {
+         
+          window.location.reload();
+        }, 3000);
+        console.log('Response Data:', response.data); 
+        // Debug: check response data
       } catch (error) {
-        console.error('Error:', error);
-        alert('Terjadi kesalahan. Silakan coba lagi.');
+        console.error('Error submitting absen:', error.response ? error.response.data : error.message);
+        toast.error('Terjadi kesalahan saat mengirim data absen. Silakan coba lagi.');
+
       }
     } else {
-      alert('Absensi hanya dapat dilakukan pada jam yang ditentukan');
+      toast.error('Absensi hanya dapat dilakukan pada jam yang ditentukan');
     }
   };
 
+  console.log(absenList)
+
   return (
     <div className="flex h-screen">
-      <aside className="fixed top-0 left-0 w-64 bg-gray-800 text-white h-screen overflow-y-auto flex flex-col">
+      <aside className="fixed top-0 left-0 w-52 bg-gray-800 text-white h-screen overflow-y-auto flex flex-col">
         <div className="flex flex-col flex-1">
           <div className="p-4 flex flex-col items-center border-b border-gray-700">
             <div className="w-24 h-24 flex items-center justify-center bg-white rounded-full mb-4">
-              <UserIcon className="h-20 w-20 text-gray-800" />
+              <UserIcon className="h-16 w-16 text-gray-800" />
             </div>
             <div className="text-center mb-4">
-              <p className="text-lg font-bold">User Name</p>
-              <p className="text-sm text-gray-400 capitalize">{role}</p>
+              <p className="text-xs font-bold capitalize">{name}</p>
+              <p className="text-xs text-gray-400 capitalize">{role}</p>
             </div>
           </div>
           <nav className="mt-4 flex-1">
             <ul>
               <li className="flex items-center p-2 hover:bg-gray-700">
-                <HomeIcon className="h-6 w-6" />
-                <NavLink to="/dashboard/mahasiswa" activeClassName="text-blue-300" className="ml-4">
+                <HomeIcon className="h-5 w-5" />
+                <NavLink to="/dashboard/magang" activeClassName="text-blue-300" className="ml-3 text-sm">
                   Beranda
                 </NavLink>
               </li>
