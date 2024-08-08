@@ -159,7 +159,7 @@ export default function LihatAbsen() {
         <div className="flex flex-col flex-1">
           <div className="p-4 flex flex-col items-center border-b border-gray-700">
             <div className="w-24 h-24 flex items-center justify-center bg-white rounded-full mb-4">
-              <img src="/src/assets/user-logo.jpg" alt="User Logo" className="h-20 w-20 rounded-full" />
+              <UserIcon className="h-20 w-20 text-gray-800" />
             </div>
             <div className="text-center mb-4">
               <p className="text-lg font-bold">User Name</p>

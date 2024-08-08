@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { HomeIcon, CalendarIcon, ClipboardDocumentIcon, DocumentTextIcon, StarIcon, ArrowLeftOnRectangleIcon, CogIcon, DocumentChartBarIcon, UserIcon } from '@heroicons/react/24/outline';
 
@@ -35,7 +35,7 @@ export default function DashboardMahasiswa() {
         <div className="flex flex-col flex-1">
           <div className="p-4 flex flex-col items-center border-b border-gray-700">
             <div className="w-24 h-24 flex items-center justify-center bg-white rounded-full mb-4">
-              <img src="/src/assets/user-logo.jpg" alt="User Logo" className="h-20 w-20 rounded-full" />
+              <UserIcon className="h-20 w-20 text-gray-800" />
             </div>
             <div className="text-center mb-4">
               <p className="text-lg font-bold capitalize">User Name</p>

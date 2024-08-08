@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { HomeIcon, UserIcon, ClipboardDocumentIcon, CogIcon, CalendarIcon, ArrowLeftOnRectangleIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, UserIcon, ClipboardDocumentIcon, CogIcon, ArrowLeftOnRectangleIcon } from '@heroicons/react/24/outline';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 function Navbar() {
@@ -45,7 +45,7 @@ export default function DashboardPembimbing() {
         <div className="flex flex-col flex-1">
           <div className="p-4 flex flex-col items-center border-b border-gray-700">
             <div className="w-24 h-24 flex items-center justify-center bg-white rounded-full mb-4">
-              <img src="/src/assets/user-logo.jpg" alt="User Logo" className="h-20 w-20 rounded-full" />
+              <UserIcon className="h-20 w-20 text-gray-800" />
             </div>
             <div className="text-center mb-4">
               <p className="text-lg font-bold">User Name</p>
@@ -67,9 +67,21 @@ export default function DashboardPembimbing() {
                 </NavLink>
               </li>
               <li className="flex items-center p-2 hover:bg-[#03306C]">
-                <NavLink to="/dashboard/lihat-absen" className="flex items-center text-white hover:text-blue-300">
-                  <CalendarIcon className="h-6 w-6" />
-                  <span className="ml-4">Lihat Presensi</span>
+                <NavLink to="/dashboard/lihat-laporan" className="flex items-center text-white hover:text-blue-300">
+                  <ClipboardDocumentIcon className="h-6 w-6" />
+                  <span className="ml-4">Lihat Laporan</span>
+                </NavLink>
+              </li>
+              <li className="flex items-center p-2 hover:bg-[#03306C]">
+                <NavLink to="/dashboard/penilaian-pembimbing" className="flex items-center text-white hover:text-blue-300">
+                  <ClipboardDocumentIcon className="h-6 w-6" />
+                  <span className="ml-4">Penilaian</span>
+                </NavLink>
+              </li>
+              <li className="flex items-center p-2 hover:bg-[#03306C]">
+                <NavLink to="/dashboard/lihat-penilaian" className="flex items-center text-white hover:text-blue-300">
+                  <ClipboardDocumentIcon className="h-6 w-6" />
+                  <span className="ml-4">Lihat Penilaian</span>
                 </NavLink>
               </li>
               <li className="flex items-center p-2 hover:bg-[#03306C]">
@@ -82,10 +94,10 @@ export default function DashboardPembimbing() {
           </nav>
         </div>
         <div className="p-4 border-t border-gray-700 mt-auto">
-          <li className="flex items-center p-2 hover:bg-[#03306C] cursor-pointer" onClick={handleLogout}>
+          <div className="flex items-center p-2 hover:bg-[#03306C] cursor-pointer" onClick={handleLogout}>
             <ArrowLeftOnRectangleIcon className="h-6 w-6" />
             <span className="ml-4">Logout</span>
-          </li>
+          </div>
         </div>
       </aside>
       <div className="flex flex-col flex-1 ml-56">

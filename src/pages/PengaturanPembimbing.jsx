@@ -1,4 +1,3 @@
-/* eslint-disable-next-line no-unused-vars */
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { HomeIcon, UserIcon, ClipboardDocumentIcon, ArrowLeftOnRectangleIcon, CogIcon, CalendarIcon } from '@heroicons/react/24/outline';
@@ -14,6 +13,72 @@ function Navbar() {
         </h3>
       </div>
     </header>
+  );
+}
+
+function Sidebar({ handleLogout }) {
+  const role = localStorage.getItem('role');
+
+  return (
+    <aside className="fixed top-0 left-0 w-56 bg-[#013E7F] text-white h-screen overflow-y-auto flex flex-col shadow-lg">
+      <div className="flex flex-col flex-1">
+        <div className="p-4 flex flex-col items-center border-b border-gray-700">
+          <div className="w-24 h-24 flex items-center justify-center bg-white rounded-full mb-4">
+            <UserIcon className="h-20 w-20 text-gray-800" />
+          </div>
+          <div className="text-center mb-4">
+            <p className="text-lg font-bold capitalize">User Name</p>
+            <p className="text-sm text-gray-400 capitalize">{role}</p>
+          </div>
+        </div>
+        <nav className="mt-4 flex-1">
+          <ul>
+            <li className="flex items-center p-2 hover:bg-[#00448F] rounded transition duration-300">
+              <NavLink to="/dashboard/pembimbing" className="flex items-center text-white hover:text-blue-300">
+                <HomeIcon className="h-6 w-6" />
+                <span className="ml-4">Beranda</span>
+              </NavLink>
+            </li>
+            <li className="flex items-center p-2 hover:bg-[#00448F] rounded transition duration-300">
+              <NavLink to="/dashboard/data-peserta" className="flex items-center text-white hover:text-blue-300">
+                <UserIcon className="h-6 w-6" />
+                <span className="ml-4">Data Peserta</span>
+              </NavLink>
+            </li>
+            <li className="flex items-center p-2 hover:bg-[#00448F] rounded transition duration-300">
+              <NavLink to="/dashboard/lihat-laporan" className="flex items-center text-white hover:text-blue-300">
+                <ClipboardDocumentIcon className="h-6 w-6" />
+                <span className="ml-4">Lihat Laporan</span>
+              </NavLink>
+            </li>
+            <li className="flex items-center p-2 hover:bg-[#00448F] rounded transition duration-300">
+              <NavLink to="/dashboard/penilaian-pembimbing" className="flex items-center text-white hover:text-blue-300">
+                <ClipboardDocumentIcon className="h-6 w-6" />
+                <span className="ml-4">Penilaian</span>
+              </NavLink>
+            </li>
+            <li className="flex items-center p-2 hover:bg-[#00448F] rounded transition duration-300">
+              <NavLink to="/dashboard/lihat-penilaian" className="flex items-center text-white hover:text-blue-300">
+                <ClipboardDocumentIcon className="h-6 w-6" />
+                <span className="ml-4">Lihat Penilaian</span>
+              </NavLink>
+            </li>
+            <li className="flex items-center p-2 hover:bg-[#00448F] rounded transition duration-300">
+              <NavLink to="/dashboard/pengaturan-pembimbing" className="flex items-center text-white hover:text-blue-300">
+                <CogIcon className="h-6 w-6" />
+                <span className="ml-4">Pengaturan</span>
+              </NavLink>
+            </li>
+          </ul>
+        </nav>
+      </div>
+      <div className="p-4 border-t border-gray-700 mt-auto">
+        <div className="flex items-center p-2 hover:bg-[#00448F] rounded transition duration-300 cursor-pointer" onClick={handleLogout}>
+          <ArrowLeftOnRectangleIcon className="h-6 w-6" />
+          <span className="ml-4">Logout</span>
+        </div>
+      </div>
+    </aside>
   );
 }
 
@@ -43,53 +108,7 @@ export default function PengaturanPembimbing() {
 
   return (
     <div className="flex h-screen font-poppins bg-gray-100">
-      <aside className="fixed top-0 left-0 w-56 bg-[#013E7F] text-white h-screen overflow-y-auto flex flex-col shadow-lg">
-        <div className="flex flex-col flex-1">
-          <div className="p-4 flex flex-col items-center border-b border-gray-700">
-            <div className="w-24 h-24 flex items-center justify-center bg-white rounded-full mb-4">
-              <img src="/src/assets/user-logo.jpg" alt="User Logo" className="h-20 w-20 rounded-full" />
-            </div>
-            <div className="text-center mb-4">
-              <p className="text-lg font-bold">User Name</p>
-              <p className="text-sm text-gray-400 capitalize">{role}</p>
-            </div>
-          </div>
-          <nav className="mt-4 flex-1">
-            <ul>
-              <li className="flex items-center p-2 hover:bg-[#00448F] rounded transition duration-300">
-                <NavLink to="/dashboard/pembimbing" className="flex items-center text-white hover:text-blue-300">
-                  <HomeIcon className="h-6 w-6" />
-                  <span className="ml-4">Beranda</span>
-                </NavLink>
-              </li>
-              <li className="flex items-center p-2 hover:bg-[#00448F] rounded transition duration-300">
-                <NavLink to="/dashboard/data-peserta" className="flex items-center text-white hover:text-blue-300">
-                  <UserIcon className="h-6 w-6" />
-                  <span className="ml-4">Data Peserta</span>
-                </NavLink>
-              </li>
-              <li className="flex items-center p-2 hover:bg-[#00448F] rounded transition duration-300">
-                <NavLink to="/dashboard/lihat-absen" className="flex items-center text-white hover:text-blue-300">
-                  <CalendarIcon className="h-6 w-6" />
-                  <span className="ml-4">Lihat Presensi</span>
-                </NavLink>
-              </li>
-              <li className="flex items-center p-2 hover:bg-[#00448F] rounded transition duration-300">
-                <NavLink to="/dashboard/pengaturan-pembimbing" className="flex items-center text-white hover:text-blue-300">
-                  <CogIcon className="h-6 w-6" />
-                  <span className="ml-4">Pengaturan</span>
-                </NavLink>
-              </li>
-            </ul>
-          </nav>
-        </div>
-        <div className="p-4 border-t border-gray-700 mt-auto">
-          <div className="flex items-center p-2 hover:bg-[#00448F] rounded transition duration-300 cursor-pointer" onClick={handleLogout}>
-            <ArrowLeftOnRectangleIcon className="h-6 w-6" />
-            <span className="ml-4">Logout</span>
-          </div>
-        </div>
-      </aside>
+      <Sidebar handleLogout={handleLogout} />
       <div className="flex flex-col flex-1 ml-56">
         <Navbar />
         <main className="flex-1 p-6 bg-gray-100 overflow-y-auto">

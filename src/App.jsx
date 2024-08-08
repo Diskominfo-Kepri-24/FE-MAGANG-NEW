@@ -12,6 +12,9 @@ import PengaturanPembimbing from './pages/PengaturanPembimbing';
 import DashboardPembimbing from './components/DashboardPembimbing';
 import DashboardMahasiswa from './components/DashboardMahasiswa';
 import ProtectedRoute from './components/ProtectedRoute';
+import LihatLaporan from './pages/LihatLaporan';
+import LihatPenilaian from './pages/LihatPenilaian';
+import PenilaianPembimbing from './pages/PenilaianPembimbing';
 
 function App() {
   return (
@@ -95,6 +98,30 @@ function App() {
         element={
           <ProtectedRoute role="pembimbing">
             <LihatAbsen />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/lihat-laporan"
+        element={
+          <ProtectedRoute role="pembimbing">
+            <LihatLaporan />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/lihat-penilaian"
+        element={
+          <ProtectedRoute role="pembimbing">
+            <LihatPenilaian />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/penilaian-pembimbing"
+        element={
+          <ProtectedRoute role="pembimbing">
+            <PenilaianPembimbing />
           </ProtectedRoute>
         }
       />

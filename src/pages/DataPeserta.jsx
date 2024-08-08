@@ -1,7 +1,6 @@
-/* eslint-disable-next-line no-unused-vars */
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { HomeIcon, UserIcon, ClipboardDocumentIcon, ArrowLeftOnRectangleIcon, CogIcon, CalendarIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, UserIcon, ClipboardDocumentIcon, CogIcon, ArrowLeftOnRectangleIcon, CalendarIcon } from '@heroicons/react/24/outline';
 import { useReactToPrint } from 'react-to-print';
 
 function Navbar() {
@@ -18,6 +17,72 @@ function Navbar() {
   );
 }
 
+function Sidebar({ handleLogout }) {
+  const role = localStorage.getItem('role');
+
+  return (
+    <aside className="fixed top-0 left-0 w-56 bg-[#013E7F] text-white h-screen overflow-y-auto flex flex-col">
+      <div className="flex flex-col flex-1">
+        <div className="p-4 flex flex-col items-center border-b border-gray-700">
+          <div className="w-24 h-24 flex items-center justify-center bg-white rounded-full mb-4">
+            <UserIcon className="h-20 w-20 text-gray-800" />
+          </div>
+          <div className="text-center mb-4">
+            <p className="text-lg font-bold">User Name</p>
+            <p className="text-sm text-gray-400 capitalize">{role}</p>
+          </div>
+        </div>
+        <nav className="mt-4 flex-1">
+          <ul>
+            <li className="flex items-center p-2 hover:bg-[#03306C]">
+              <NavLink to="/dashboard/pembimbing" className="flex items-center text-white hover:text-blue-300">
+                <HomeIcon className="h-6 w-6" />
+                <span className="ml-4">Beranda</span>
+              </NavLink>
+            </li>
+            <li className="flex items-center p-2 hover:bg-[#03306C]">
+              <NavLink to="/dashboard/data-peserta" className="flex items-center text-white hover:text-blue-300">
+                <UserIcon className="h-6 w-6" />
+                <span className="ml-4">Data Peserta</span>
+              </NavLink>
+            </li>
+            <li className="flex items-center p-2 hover:bg-[#03306C]">
+              <NavLink to="/dashboard/lihat-laporan" className="flex items-center text-white hover:text-blue-300">
+                <ClipboardDocumentIcon className="h-6 w-6" />
+                <span className="ml-4">Lihat Laporan</span>
+              </NavLink>
+            </li>
+            <li className="flex items-center p-2 hover:bg-[#03306C]">
+              <NavLink to="/dashboard/penilaian-pembimbing" className="flex items-center text-white hover:text-blue-300">
+                <ClipboardDocumentIcon className="h-6 w-6" />
+                <span className="ml-4">Penilaian</span>
+              </NavLink>
+            </li>
+            <li className="flex items-center p-2 hover:bg-[#03306C]">
+              <NavLink to="/dashboard/lihat-penilaian" className="flex items-center text-white hover:text-blue-300">
+                <ClipboardDocumentIcon className="h-6 w-6" />
+                <span className="ml-4">Lihat Penilaian</span>
+              </NavLink>
+            </li>
+            <li className="flex items-center p-2 hover:bg-[#03306C]">
+              <NavLink to="/dashboard/pengaturan-pembimbing" className="flex items-center text-white hover:text-blue-300">
+                <CogIcon className="h-6 w-6" />
+                <span className="ml-4">Pengaturan</span>
+              </NavLink>
+            </li>
+          </ul>
+        </nav>
+      </div>
+      <div className="p-4 border-t border-gray-700 mt-auto">
+        <div className="flex items-center p-2 hover:bg-[#03306C] cursor-pointer" onClick={handleLogout}>
+          <ArrowLeftOnRectangleIcon className="h-6 w-6" />
+          <span className="ml-4">Logout</span>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
 export default function DataPeserta() {
   const navigate = useNavigate();
   const role = localStorage.getItem('role');
@@ -25,13 +90,14 @@ export default function DataPeserta() {
   const [searchTerm, setSearchTerm] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   const componentRef = useRef(); // Reference for printing
 
   useEffect(() => {
     // Fetch data peserta dari server
     const fetchData = async () => {
       try {
-        // Ganti dengan API endpoint Anda yang sesuai
         const response = await fetch('http://127.0.0.1:8000/api/v1/peserta', {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('access_token')}`,
@@ -43,7 +109,6 @@ export default function DataPeserta() {
         }
 
         const data = await response.json();
-        // Pastikan format data sesuai dengan key yang diharapkan
         setPeserta(data.peserta);
       } catch (error) {
         console.error('There was a problem with the fetch operation:', error);
@@ -59,14 +124,24 @@ export default function DataPeserta() {
     const start = startDate ? new Date(startDate) : null;
     const end = endDate ? new Date(endDate) : null;
 
-    // Filter by name or school/university
     const matchesSearchTerm = data.nama.toLowerCase().includes(searchTerm.toLowerCase()) || data.asalSekolah.toLowerCase().includes(searchTerm.toLowerCase());
-
-    // Filter by date range
     const isWithinDateRange = (!start || mulaiMagang >= start) && (!end || akhirMagang <= end);
 
     return matchesSearchTerm && isWithinDateRange;
   });
+
+  // Logic for displaying current items
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredPeserta.slice(indexOfFirstItem, indexOfLastItem);
+
+  // Logic for displaying page numbers
+  const pageNumbers = [];
+  for (let i = 1; i <= Math.ceil(filteredPeserta.length / itemsPerPage); i++) {
+    pageNumbers.push(i);
+  }
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const handleLogout = () => {
     localStorage.removeItem('access_token');
@@ -89,57 +164,11 @@ export default function DataPeserta() {
 
   return (
     <div className="flex h-screen font-poppins">
-      <aside className="fixed top-0 left-0 w-56 bg-[#013E7F] text-white h-screen overflow-y-auto flex flex-col">
-        <div className="flex flex-col flex-1">
-          <div className="p-4 flex flex-col items-center border-b border-gray-700">
-            <div className="w-24 h-24 flex items-center justify-center bg-white rounded-full mb-4">
-              <img src="/src/assets/user-logo.jpg" alt="User Logo" className="h-20 w-20 rounded-full" />
-            </div>
-            <div className="text-center mb-4">
-              <p className="text-lg font-bold">User Name</p>
-              <p className="text-sm text-gray-400 capitalize">{role}</p>
-            </div>
-          </div>
-          <nav className="mt-4 flex-1">
-            <ul>
-              <li className="flex items-center p-2 hover:bg-[#03306C]">
-                <NavLink to="/dashboard/pembimbing" className="flex items-center text-white hover:text-blue-300">
-                  <HomeIcon className="h-6 w-6" />
-                  <span className="ml-4">Beranda</span>
-                </NavLink>
-              </li>
-              <li className="flex items-center p-2 hover:bg-[#03306C]">
-                <NavLink to="/dashboard/data-peserta" className="flex items-center text-white hover:text-blue-300">
-                  <UserIcon className="h-6 w-6" />
-                  <span className="ml-4">Data Peserta</span>
-                </NavLink>
-              </li>
-              <li className="flex items-center p-2 hover:bg-[#03306C]">
-                <NavLink to="/dashboard/lihat-absen" className="flex items-center text-white hover:text-blue-300">
-                  <CalendarIcon className="h-6 w-6" />
-                  <span className="ml-4">Lihat Presensi</span>
-                </NavLink>
-              </li>
-              <li className="flex items-center p-2 hover:bg-[#03306C]">
-                <NavLink to="/dashboard/pengaturan-pembimbing" className="flex items-center text-white hover:text-blue-300">
-                  <CogIcon className="h-6 w-6" />
-                  <span className="ml-4">Pengaturan</span>
-                </NavLink>
-              </li>
-            </ul>
-          </nav>
-        </div>
-        <div className="p-4 border-t border-gray-700 mt-auto">
-          <li className="flex items-center p-2 hover:bg-[#03306C] cursor-pointer" onClick={handleLogout}>
-            <ArrowLeftOnRectangleIcon className="h-6 w-6" />
-            <span className="ml-4">Logout</span>
-          </li>
-        </div>
-      </aside>
+      <Sidebar handleLogout={handleLogout} />
       <div className="flex flex-col flex-1 ml-56">
         <Navbar />
         <main className="flex-1 p-4 bg-gray-100 overflow-y-auto">
-          <h1 className="text-2xl font-bold mb-4 text-[#00448F]">Data Peserta</h1>
+          <h1 className="text-3xl font-bold mb-4 text-[#00448F]">Data Peserta</h1>
           <div className="mb-4 flex justify-between items-center">
             <input type="text" className="w-1/3 p-2 border rounded" placeholder="Cari Nama atau Asal Sekolah/Univ" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             <div className="flex space-x-2 items-center">
@@ -160,37 +189,53 @@ export default function DataPeserta() {
             <table className="min-w-full bg-white border border-gray-300 rounded-md">
               <thead className="bg-[#00448F] text-white">
                 <tr>
-                  <th className="py-2 px-4 border">No</th>
-                  <th className="py-2 px-4 border">Nama</th>
-                  <th className="py-2 px-4 border">Periode Magang</th>
-                  <th className="py-2 px-4 border">Asal Sekolah/Univ</th>
-                  <th className="py-2 px-4 border">Laporan</th>
-                  <th className="py-2 px-4 border">Penilaian</th>
+                  <th className="py-1 px-2 border">No</th>
+                  <th className="py-1 px-2 border">Nama</th>
+                  <th className="py-1 px-2 border">Periode Magang</th>
+                  <th className="py-1 px-2 border">Asal Sekolah/Univ</th>
+                  <th className="py-1 px-2 border">Presensi</th>
+                  <th className="py-1 px-2 border">Catatan</th>
+                  <th className="py-1 px-2 border">Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredPeserta.length > 0 ? (
-                  filteredPeserta.map((data, index) => (
+                {currentItems.length > 0 ? (
+                  currentItems.map((data, index) => (
                     <tr key={index} className="hover:bg-gray-200">
-                      <td className="py-2 px-4 border">{index + 1}</td>
-                      <td className="py-2 px-4 border">{data.nama}</td>
-                      <td className="py-2 px-4 border">
+                      <td className="py-1 px-2 border text-center">{indexOfFirstItem + index + 1}</td>
+                      <td className="py-1 px-2 border">{data.nama}</td>
+                      <td className="py-1 px-2 border">
                         {formatDate(data.mulaiMagang)} / {formatDate(data.akhirMagang)}
                       </td>
-                      <td className="py-2 px-4 border">{data.asalSekolah}</td>
-                      <td className="py-2 px-4 border">{data.laporan || 'Belum ada'}</td>
-                      <td className="py-2 px-4 border">{data.penilaian || 'Belum dinilai'}</td>
+                      <td className="py-1 px-2 border">{data.asalSekolah}</td>
+                      <td className="py-1 px-2 border">{data.presensi || 'Belum ada'}</td>
+                      <td className="py-1 px-2 border">{data.catatan || 'Belum ada'}</td>
+                      <td className="py-1 px-2 border text-center">
+                        <button className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition">Edit</button>
+                        <button className="bg-red-500 text-white px-2 py-1 rounded ml-2 hover:bg-red-600 transition">Delete</button>
+                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="py-2 px-4 border text-center">
+                    <td colSpan="7" className="py-2 px-4 border text-center">
                       Tidak ada peserta yang ditemukan.
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
+            <nav className="flex justify-center mt-4">
+              <ul className="inline-flex items-center -space-x-px">
+                {pageNumbers.map((number) => (
+                  <li key={number} className="px-2">
+                    <button onClick={() => paginate(number)} className={`px-3 py-1 rounded-md border ${currentPage === number ? 'bg-[#00448F] text-white' : 'bg-white text-[#00448F] hover:bg-gray-200'}`}>
+                      {number}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           </div>
         </main>
       </div>
