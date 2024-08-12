@@ -8,7 +8,7 @@ export default function Kegiatan() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const userId = localStorage.getItem("user_id");
   const name = localStorage.getItem("name");
-  console.log(name)
+  // console.log(activityList);
   const apiUrl = `${import.meta.env.VITE_APP_LINK_API}/kegiatan`;
 
   useEffect(() => {
@@ -27,7 +27,10 @@ export default function Kegiatan() {
             'Authorization': `Bearer ${token}`,
           },
         });
-        setActivityList(response.data);
+        // console.log(response.data);
+        const filteredActivities = response.data.filter(activity => activity.user_id == userId);
+        console.log(userId);
+      setActivityList(filteredActivities);
       } catch (error) {
         console.error('Error fetching activities:', error.response ? error.response.data : error.message);
         alert('Gagal mendapatkan data kegiatan.');

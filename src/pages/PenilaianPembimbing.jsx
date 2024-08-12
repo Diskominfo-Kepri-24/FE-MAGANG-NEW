@@ -1,60 +1,69 @@
-/* eslint-disable-next-line no-unused-vars */
 import React, { useState, useEffect } from 'react';
-
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 export default function PenilaianPembimbing() {
-
   const [penilaianList, setPenilaianList] = useState([]);
-  const [editingIndex, setEditingIndex] = useState(null);
-  const [editValue, setEditValue] = useState("");
+  const [peserta, setPeserta] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [combinedData, setCombinedData] = useState([]);
+  const [ratedUsers, setRatedUsers] = useState(new Set()); // Track users who have been rated
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Fetch data penilaian
-    // Contoh fetch data dari API atau server
-    // setPenilaianList(dataDariServer);
+    const fetchPenilaian = async () => {
+      const token = localStorage.getItem('access_token');
+      try {
+        const response = await axios.get('http://localhost:8000/api/v1/penilaian', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setPenilaianList(response.data);
+        setRatedUsers(new Set(response.data.map(p => p.user_id))); // Initialize rated users
+      } catch (error) {
+        console.error('There was a problem fetching penilaian data:', error);
+        alert('Terjadi kesalahan saat mengambil data penilaian.');
+      }
+    };
+
+    // Fetch data peserta
+    const fetchPeserta = async () => {
+      const token = localStorage.getItem("access_token");
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/api/v1/user-magang', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setPeserta(response.data.users);
+      } catch (error) {
+        console.error('Error fetching peserta data:', error);
+      }
+    };
+
+    fetchPenilaian();
+    fetchPeserta();
   }, []);
 
-  const getDescription = (nilai) => {
-    if (nilai > 90) {
-      return 'Sangat Baik';
-    } else if (nilai > 80) {
-      return 'Baik';
-    } else if (nilai > 70) {
-      return 'Cukup';
-    } else if (nilai > 60) {
-      return 'Sedang';
-    } else {
-      return 'Kurang';
-    }
+  useEffect(() => {
+    // Combine and filter the penilaian and peserta data
+    const combined = peserta.map((user) => {
+      const penilaian = penilaianList.find((penilaian) => penilaian.user_id === user.id_user);
+      return penilaian ? { ...user, ...penilaian } : { ...user, nilai: "Belum dinilai", grade: "Belum dinilai" };
+    });
+
+    setCombinedData(combined);
+  }, [penilaianList, peserta]); // Recalculate whenever penilaianList or peserta changes
+
+  const handleTambah = (id) => {
+    navigate(`/dashboard/penilaian-pembimbing/nilai/${id}/add`);
   };
 
-  const handleEdit = (index) => {
-    setEditingIndex(index);
-    setEditValue(penilaianList[index].nilai);
+  const handleEdit = (id) => {
+    navigate(`/dashboard/penilaian-pembimbing/nilai/${id}/edit`);
   };
-
-  const handleSave = (index) => {
-    if (editValue >= 0 && editValue <= 100) {
-      const updatedList = [...penilaianList];
-      updatedList[index].nilai = editValue;
-      setPenilaianList(updatedList);
-      setEditingIndex(null);
-    } else {
-      alert('Nilai harus antara 0 dan 100');
-    }
-  };
-
-  const handleCancel = () => {
-    setEditingIndex(null);
-    setEditValue("");
-  };
-
-  const filteredPenilaianList = penilaianList.filter((penilaian) =>
-    penilaian.nama.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
- 
 
   return (
     <div className="flex h-screen">
@@ -70,48 +79,54 @@ export default function PenilaianPembimbing() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <table className="min-w-full bg-white border border-gray-300 rounded-md">
-            <thead className="bg-gray-700 text-white">
-              <tr>
-                <th className="py-2 px-4 border">No</th>
-                <th className="py-2 px-4 border">Nama</th>
-                <th className="py-2 px-4 border">Nilai</th>
-                <th className="py-2 px-4 border">Grade</th>
-                <th className="py-2 px-4 border">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredPenilaianList.map((penilaian, index) => (
-                <tr key={index} className="hover:bg-gray-200">
-                  <td className="py-2 px-4 border">{index + 1}</td>
-                  <td className="py-2 px-4 border">{penilaian.nama}</td>
-                  <td className="py-2 px-4 border">
-                    {editingIndex === index ? (
-                      <input
-                        type="number"
-                        value={editValue}
-                        onChange={(e) => setEditValue(Math.max(0, Math.min(100, Number(e.target.value))))}
-                        className="w-full p-2 border rounded"
-                      />
-                    ) : (
-                      penilaian.nilai
-                    )}
-                  </td>
-                  <td className="py-2 px-4 border">{getDescription(penilaian.nilai)}</td>
-                  <td className="py-2 px-4 border">
-                    {editingIndex === index ? (
-                      <div>
-                        <button className="text-green-500 mr-2" onClick={() => handleSave(index)}>Save</button>
-                        <button className="text-red-500" onClick={handleCancel}>Cancel</button>
-                      </div>
-                    ) : (
-                      <button className="text-blue-500" onClick={() => handleEdit(index)}>Edit</button>
-                    )}
-                  </td>
+        
+            <table className="min-w-full bg-white border border-gray-300 rounded-md">
+              <thead className="bg-gray-700 text-white">
+                <tr>
+                  <th className="py-2 px-4 border">No</th>
+                  <th className="py-2 px-4 border">Nama</th>
+                  <th className="py-2 px-4 border">Nilai</th>
+                  <th className="py-2 px-4 border">Grade</th>
+                  <th className="py-2 px-4 border">Aksi</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {combinedData
+                  .filter(penilaian => penilaian.nama.toLowerCase().includes(searchTerm.toLowerCase()))
+                  .map((penilaian, index) => (
+                    <tr key={penilaian.id_user} className="hover:bg-gray-200">
+                      <td className="py-2 px-4 border">{index + 1}</td>
+                      <td className="py-2 px-4 border">{penilaian.nama}</td>
+                      <td className="py-2 px-4 border">{penilaian.nilai}</td>
+                      <td className="py-2 px-4 border">
+                        {/* Calculate and display grade if available, otherwise show "Belum dinilai" */}
+                        {penilaian.nilai === "Belum dinilai" ? "Belum dinilai" : (penilaian.nilai > 90 ? 'Amat Baik' : penilaian.nilai > 80 ? 'Baik' : penilaian.nilai > 70 ? 'Cukup' : penilaian.nilai > 60 ? 'Sedang' : 'Kurang')}
+                      </td>
+                      <td className="py-2 px-4 border">
+                        {/* Conditionally render "Tambah" button based on whether user has been rated */}
+                        {!ratedUsers.has(penilaian.id_user) && (
+                          <button
+                            className="text-blue-500"
+                            onClick={() => handleTambah(penilaian.id_user)}
+                          >
+                            Tambah
+                          </button>
+                        )}
+                        {/* Conditionally render "Edit" button based on whether user has been rated */}
+                        {ratedUsers.has(penilaian.id_user) && (
+                          <button
+                            className="ml-5 text-blue-500"
+                            onClick={() => handleEdit(penilaian.id)}
+                          >
+                            Edit
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+
         </main>
       </div>
     </div>

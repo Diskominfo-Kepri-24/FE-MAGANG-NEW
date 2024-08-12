@@ -18,6 +18,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import DetailPresensi from './components/DetailPresensi';
+import Aksipenilaian from './components/Aksipenilaian';
 
 function App() {
   const location = useLocation();
@@ -148,6 +149,14 @@ function App() {
           element={
             <ProtectedRoute role="pembimbing">
               <DetailPresensi />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/penilaian-pembimbing/nilai/:id/:action"
+          element={
+            <ProtectedRoute role="pembimbing">
+              <Aksipenilaian />
             </ProtectedRoute>
           }
         />
