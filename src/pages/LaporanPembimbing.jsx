@@ -61,15 +61,16 @@ export default function LaporanPembimbing() {
     return user ? user.nama : 'Unknown User';
   };
 
-  const filteredLaporanList = Array.isArray(laporanList)
-    ? laporanList.filter((laporan) => {
-        const isMatchLink = laporan.link_laporan.toLowerCase().includes(searchTerm.toLowerCase());
-        const isMatchDate = filterDate
-          ? new Date(laporan.created_at).toLocaleDateString() === new Date(filterDate).toLocaleDateString()
-          : true;
-        return isMatchLink && isMatchDate;
-      })
-    : [];
+  // Function to filter laporanList by search term and date
+  const filteredLaporanList = laporanList.filter((laporan) => {
+    const userName = getUserNameById(laporan.user_id).toLowerCase();
+    const isMatchName = userName.includes(searchTerm.toLowerCase());
+    const isMatchLink = laporan.link_laporan.toLowerCase().includes(searchTerm.toLowerCase());
+    const isMatchDate = filterDate
+      ? new Date(laporan.created_at).toLocaleDateString() === new Date(filterDate).toLocaleDateString()
+      : true;
+    return (isMatchName || isMatchLink) && isMatchDate;
+  });
 
   return (
     <div className="flex h-screen">
@@ -80,7 +81,7 @@ export default function LaporanPembimbing() {
             <input
               type="text"
               className="w-full p-2 border rounded"
-              placeholder="Cari Link Laporan"
+              placeholder="Cari Nama Peserta Magang"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -98,7 +99,7 @@ export default function LaporanPembimbing() {
                   <th className="py-2 px-4 border text-center">No</th>
                   <th className="py-2 px-4 border text-center">Nama</th>
                   <th className="py-2 px-4 border text-center">Link</th>
-                  <th className="py-2 px-2 border text-center">Tanggal Pengumpulan</th>
+                  <th className="py-2 px-4 border text-center">Tanggal</th>
                 </tr>
               </thead>
               <tbody>
