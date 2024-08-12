@@ -41,6 +41,7 @@ export default function DetailPresensi() {
             },
           }
         );
+        // console.log(response.data);
         setKegiatan(response.data || []);
       } catch (error) {
         if (error.response && error.response.status === 404) {
@@ -142,17 +143,21 @@ export default function DetailPresensi() {
   };
 
   // Gabungkan data absensi dan catatan berdasarkan tanggal
-  const combinedData = absensi.map(absenItem => {
-    const relatedCatatan = Array.isArray(kegiatan) ? kegiatan.find(catatanItem => catatanItem.tanggal === absenItem.tanggal) : null;
-    return {
-      ...absenItem,
-      catatan: relatedCatatan ? relatedCatatan.catatan : 'Tidak ada catatan',
-      presensiMasuk: absenItem.jam_masuk || "Tidak ada presensi",
-      presensiPulang: absenItem.jam_pulang || "Tidak ada presensi",
-      status: absenItem.status || 'Tidak ada status'
-    };
-  });
+const combinedData = absensi.map(absenItem => {
+  const relatedCatatan = Array.isArray(kegiatan) ? kegiatan.find(catatanItem => catatanItem.tanggal === absenItem.tanggal) : null;
+  return {
+    ...absenItem,
+    catatan: relatedCatatan ? relatedCatatan.catatan : 'Tidak ada catatan',
+    id_kegiatan: relatedCatatan ? relatedCatatan.id : null, // Menambahkan id kegiatan di sini
+    presensiMasuk: absenItem.jam_masuk || "Tidak ada presensi",
+    presensiPulang: absenItem.jam_pulang || "Tidak ada presensi",
+    status: absenItem.status || 'Tidak ada status'
+  };
+});
 
+// console.log(combinedData);
+
+  
   return (
     <div className="flex ml-52 py-10 px-10">
       <div className="overflow-x-auto bg-white rounded shadow-md">
@@ -200,13 +205,13 @@ export default function DetailPresensi() {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-500 hover:underline cursor-pointer">
                   <button
                     className="px-3 py-2 rounded-full bg-blue-500 text-white mr-2"
-                    onClick={() => confirmAction(data.id_absen, id, 'confirm')}
+                    onClick={() => confirmAction(data.id_absen, data.id_kegiatan, 'confirm')}
                   >
                     Dikonfirmasi
                   </button>
                   <button
                     className="px-3 py-2 rounded-full bg-red-500 text-white"
-                    onClick={() => confirmAction(data.id_absen, id, 'reject')}
+                    onClick={() => confirmAction(data.id_absen, data.id_kegiatan, 'reject')}
                   >
                     Tolak
                   </button>
