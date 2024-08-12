@@ -8,22 +8,52 @@ export default function Login() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Check for token and role on component mount
+  const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 menit dalam milidetik
+
+  // Function to update last activity time
+  const updateLastActivityTime = () => {
+    localStorage.setItem("last_activity_time", Date.now().toString());
+  };
+
+  // Check for token, role, and session timeout on component mount
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     const role = localStorage.getItem("role");
+    const lastActivityTime = localStorage.getItem("last_activity_time");
+
     if (token && role) {
-      if (role === "magang") {
-        navigate("/dashboard/magang");
-      } else if (role === "pembimbing") {
-        navigate("/dashboard/pembimbing");
+      const currentTime = Date.now();
+      if (lastActivityTime && currentTime - lastActivityTime > SESSION_TIMEOUT) {
+        // Session expired
+        handleLogout();
+      } else {
+        // Session valid, update last activity time
+        updateLastActivityTime();
+
+        // Redirect based on role
+        if (role === "magang") {
+          navigate("/dashboard/magang");
+        } else if (role === "pembimbing") {
+          navigate("/dashboard/pembimbing");
+        }
       }
     }
   }, [navigate]);
 
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("name");
+    localStorage.removeItem("last_activity_time");
+    setError("Session expired. Please log in again.");
+    navigate("/login");
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setLoginData((prevData) => ({ ...prevData, [name]: value }));
+    updateLastActivityTime();
   };
 
   const handleSubmit = async (e) => {
@@ -34,14 +64,16 @@ export default function Login() {
         loginData 
       );
 
-      console.log (response);
-      const { access_token, role,user_id, name } = response.data;
+      const { access_token, role, user_id, name } = response.data;
 
-      // Save access token to local storage
+      // Save access token and other data to local storage
       localStorage.setItem("access_token", access_token);
       localStorage.setItem("role", role);
       localStorage.setItem("user_id", user_id);
       localStorage.setItem("name", name);
+
+      // Update last activity time
+      updateLastActivityTime();
 
       // Redirect based on role
       if (role === "magang") {

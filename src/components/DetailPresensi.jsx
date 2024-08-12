@@ -40,9 +40,13 @@ export default function DetailPresensi() {
             }
           }
         );
-        setCatatan(response.data); // Ensure catatan is an array
+        setCatatan(Array.isArray(response.data) ? response.data : []); // Ensure catatan is an array
       } catch (error) {
-        console.error('Error fetching catatan data:', error);
+        if (error.response && error.response.status === 404) {
+          console.warn('Data catatan tidak ditemukan:', error.message);
+        } else {
+          console.error('Error fetching catatan data:', error.message);
+        }
       }
     };
     fetchCatatan();
@@ -104,17 +108,19 @@ export default function DetailPresensi() {
     }
   };
 
+
   // Gabungkan data absensi dan catatan berdasarkan tanggal
   const combinedData = absensi.map(absenItem => {
     const relatedCatatan = Array.isArray(catatan) ? catatan.find(catatanItem => catatanItem.tanggal === absenItem.tanggal) : null;
     return {
       ...absenItem,
       catatan: relatedCatatan ? relatedCatatan.catatan : 'Tidak ada catatan',
-      presensi: absenItem.jam_masuk || 'Tidak ada presensi',
+      presensiMasuk: absenItem.jam_masuk || 'Tidak ada presensi',
+      presensiPulang: absenItem.jam_pulang || 'Tidak ada presensi',
       status: absenItem.status || 'Tidak ada status'
     };
   });
-//   console.log(combinedData);
+
   return (
     <>
       <div className="flex ml-52 py-10 px-10">
@@ -123,8 +129,8 @@ export default function DetailPresensi() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Presensi</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jam Masuk</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jam Pulang</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Catatan</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
@@ -133,20 +139,20 @@ export default function DetailPresensi() {
             <tbody className="bg-white divide-y divide-gray-200">
               {combinedData.map((data, index) => (
                 <tr key={index}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{data.tanggal}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{data.presensi}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{data.catatan}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{data.status}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">{index + 1}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">{data.presensiMasuk}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">{data.presensiPulang}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">{data.catatan}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">{data.status}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-500 hover:underline cursor-pointer">
                     <button 
-                      className='px-3 py-2 rounded-full bg-blue-500 text-white'
+                      className='px-3 py-2 rounded-full bg-blue-500 text-white mr-2'
                       onClick={() => handleConfirm(data.id_absen, id)}
                     >
                       Dikonfirmasi
                     </button>
                     <button 
-                      className='px-3 py-2 rounded-full bg-blue-500 text-white'
+                      className='px-3 py-2 rounded-full bg-red-500 text-white'
                       onClick={() => handleReject(data.id_absen, id)}
                     >
                       Tolak

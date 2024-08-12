@@ -2,11 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Bar, Legend } from 'recharts';
 
-
-
 export default function DashboardPembimbing() {
- 
-
   const [chartData, setChartData] = useState([]);
 
   useEffect(() => {
@@ -25,11 +21,9 @@ export default function DashboardPembimbing() {
   }, []);
 
   return (
-    <div className="flex h-screen">
-      
+    <div className="flex h-screen overflow-hidden">
       <div className="flex flex-col flex-1 ml-52">
-       
-        <main className="flex-1 p-6 bg-gray-100 overflow-y-auto">
+        <main className="flex-1 p-6 bg-gray-100 overflow-y-scroll">
           <div className="bg-white p-6 rounded-lg shadow-md mb-6">
             <h1 className="text-3xl font-bold mb-4 text-blue-900">Selamat Datang di Dashboard Pembimbing</h1>
             <p className="text-lg text-gray-700 mb-4">

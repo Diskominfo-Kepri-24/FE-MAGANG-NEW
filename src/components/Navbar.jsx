@@ -1,7 +1,8 @@
-
 export default function Navbar() {
-    return (
-      <header className="bg-gray-800 ml-52 text-white p-4 justify-start flex items-center">
+  return (
+    <>
+      <style>{`body { overflow: hidden; }`}</style>
+      <header className="bg-gray-800 fixed top-0 left-52 right-0 text-white p-4 flex items-center z-10">
         <img
           src="/src/assets/logo.png"
           alt="Logo"
@@ -14,5 +15,9 @@ export default function Navbar() {
           </h3>
         </div>
       </header>
-    );
-  }
+      <div className="ml-52 pt-20">
+        {/* Main content goes here */}
+      </div>
+    </>
+  );
+}

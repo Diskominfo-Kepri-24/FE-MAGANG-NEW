@@ -1,16 +1,14 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import PropTypes from 'prop-types';
-import { toast } from 'react-toastify'; 
+import { toast } from 'react-toastify';
+
 export default function Absen() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [absenList, setAbsenList] = useState([]);
   const [data, setData] = useState([]);
 
   const token = localStorage.getItem("access_token");
-  const name = localStorage.getItem("name");
-  console.log (name)
-
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -26,8 +24,8 @@ export default function Absen() {
           `${import.meta.env.VITE_APP_LINK_API}/absen/magang`,
           {
             headers: {
-              Authorization: `Bearer ${token}`
-            }
+              Authorization: `Bearer ${token}`,
+            },
           }
         );
 
@@ -38,10 +36,11 @@ export default function Absen() {
           jam_masuk: item.jam_masuk,
           jam_pulang: item.jam_pulang,
           status: item.status,
-          hari: item.hari
+          hari: item.hari,
         }));
 
-        setData(result); // Simpan data di state
+        setData(result);
+        setAbsenList(result); // Simpan data di state absenList juga
       } catch (error) {
         toast.error('Gagal mengambil data. Silakan coba lagi.');
       }
@@ -50,86 +49,97 @@ export default function Absen() {
     fetchData();
   }, [token]);
 
-
-
   const handleAbsen = async (type) => {
     const now = new Date();
     const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const formattedTime = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).replace(/\./g, ':');
-  
+
     const dayOfWeek = now.getDay();
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-  
+
     if (isWeekend) {
-      toast.error('Absensi hanya dapat dilakukan dari hari Senin hingga hari Jumat.');
+        alert('Absensi hanya dapat dilakukan dari hari Senin hingga hari Jumat.');
+        return;
+    }
+
+    const existingAbsenIndex = absenList.findIndex(absen => absen.tanggal === formattedDate);
+
+    if (existingAbsenIndex !== -1) {
+      const existingAbsen = absenList[existingAbsenIndex];
+
+      // Cek apakah user sudah absen pada hari yang sama
+    if (type === 'masuk' && existingAbsen.jam_masuk) {
+      toast.warning('Anda sudah melakukan absen masuk hari ini.', {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+      });
+      return;
+    } else if (type === 'pulang' && existingAbsen.jam_pulang) {
+      toast.warning('Anda sudah melakukan absen pulang hari ini.', {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+      });
       return;
     }
-  
-    const existingAbsenIndex = absenList.findIndex(absen => absen.tanggal === formattedDate);
-  
-    if ((type === 'masuk' && now.getHours() >= 7 && now.getHours() <= 8) ||
-        (type === 'pulang' && now.getHours() >= 15 && now.getHours() < 16)) {
-      if (existingAbsenIndex !== -1) {
-        if (absenList[existingAbsenIndex][type === 'masuk' ? 'jam_masuk' : 'jam_pulang']) {
-          alert(`Anda sudah melakukan absen ${type} hari ini.`);
-        } else {
-          // Update the existing absen entry
-          const updatedAbsenList = [...absenList];
-          updatedAbsenList[existingAbsenIndex][type === 'masuk' ? 'jam_masuk' : 'jam_pulang'] = formattedTime;
-          setAbsenList(updatedAbsenList);
-        }
-      } else {
-        // Add a new absen entry
-        const newAbsen = { 
-          tanggal: formattedDate, 
-          [type === 'masuk' ? 'jam_masuk' : 'jam_pulang']: formattedTime 
-        };
-        setAbsenList([...absenList, newAbsen]);
-      }
-      
-      const token = localStorage.getItem('access_token'); // Get token from local storage
-      console.log('Token:', token); // Debug: check if token is retrieved properly
-  
-      try {
-        const response = await axios.post(
-          `http://127.0.0.1:8000/api/v1/absen/jam-${type}`,
-          {
-            tanggal: formattedDate,
-            [type === 'masuk' ? 'jam_masuk' : 'jam_pulang']: formattedTime
-          },
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-        toast.success('Absen berhasil dikirim.');
-        setTimeout(() => {
-         
-          window.location.reload();
-        }, 3000);
-        console.log('Response Data:', response.data); 
-        // Debug: check response data
-      } catch (error) {
-        console.error('Error submitting absen:', error.response ? error.response.data : error.message);
-        toast.error('Terjadi kesalahan saat mengirim data absen. Silakan coba lagi.');
 
-      }
+      // Update entry pada tanggal yang sama
+      const updatedAbsen = {
+        ...existingAbsen,
+        [type === 'masuk' ? 'jam_masuk' : 'jam_pulang']: formattedTime,
+      };
+
+      const updatedAbsenList = [...absenList];
+      updatedAbsenList[existingAbsenIndex] = updatedAbsen;
+      setAbsenList(updatedAbsenList);
+      setData(updatedAbsenList); // Update juga pada state data
+
     } else {
-      toast.error('Absensi hanya dapat dilakukan pada jam yang ditentukan');
+      // Buat entry baru jika belum ada absen pada tanggal tersebut
+      const newAbsen = { tanggal: formattedDate, jam_masuk: type === 'masuk' ? formattedTime : '', jam_pulang: type === 'pulang' ? formattedTime : '', status: 'Menunggu' };
+      const newAbsenList = [...absenList, newAbsen];
+      setAbsenList(newAbsenList);
+      setData(newAbsenList); // Update juga pada state data
+    }
+
+    const data = {
+      tanggal: formattedDate,
+      ...(type === 'masuk' ? { jam_masuk: formattedTime } : { jam_pulang: formattedTime }),
+    };
+
+    try {
+      const response = await axios.post(`http://127.0.0.1:8000/api/v1/absen/jam-${type}`, data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.status === 200) {
+        toast.success('Absensi berhasil dilakukan.');
+      } else {
+        toast.error('Gagal melakukan absensi. Silakan coba lagi.');
+      }
+    } catch (error) {
+      console.error('Error submitting absen:', error);
+      toast.error('Terjadi kesalahan saat mengirim data absen. Silakan coba lagi.');
     }
   };
 
-  console.log(absenList)
+  console.log(absenList);
 
   return (
     <div className="flex h-screen">
-      
-
       <div className="flex flex-col flex-1 ml-64">
-        
-
         <div className="flex flex-col flex-1 p-6 overflow-y-auto">
           <div className="text-center w-full max-w-screen-lg mx-auto">
             <h1 className="text-2xl font-bold mb-6">ABSENSI</h1>
@@ -213,7 +223,7 @@ DataTable.propTypes = {
       jam_masuk: PropTypes.string,
       jam_pulang: PropTypes.string,
       status: PropTypes.string.isRequired,
-      hari: PropTypes.string.isRequired
+      hari: PropTypes.string.isRequired,
     })
   ).isRequired,
 };

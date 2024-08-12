@@ -8,7 +8,7 @@ export default function Kegiatan() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const userId = localStorage.getItem("user_id");
   const name = localStorage.getItem("name");
-  console.log (name)
+  console.log(name)
   const apiUrl = `${import.meta.env.VITE_APP_LINK_API}/kegiatan`;
 
   useEffect(() => {
@@ -36,8 +36,6 @@ export default function Kegiatan() {
 
     fetchActivityData();
   }, [apiUrl]);
-
-
 
   const handleSubmit = async () => {
     const now = new Date();
@@ -87,11 +85,7 @@ export default function Kegiatan() {
 
   return (
     <div className="flex h-screen">
-
-
       <div className="flex flex-col flex-1 ml-64">
-        
-
         <div className="flex flex-col flex-1 p-6 overflow-y-auto">
           <div className="text-center w-full max-w-screen-lg mx-auto">
             <h1 className="text-2xl font-bold mb-6">KEGIATAN</h1>
@@ -103,7 +97,7 @@ export default function Kegiatan() {
                 {currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </div>
               <textarea
-                className="w-full h-64 p-2 border mb-4 rounded-md shadow-sm"
+                className="w-full h-20 p-2 border mb-4 rounded-md shadow-sm resize-none"
                 placeholder="Catatan kegiatan..."
                 value={activity}
                 onChange={(e) => setActivity(e.target.value)}
@@ -118,7 +112,7 @@ export default function Kegiatan() {
               </button>
             </div>
 
-            <div className="w-full overflow-x-auto">
+            <div className="w-full overflow-x-auto overflow-y-scroll max-h-64">
               <table className="w-full min-w-full border border-gray-300 rounded-md">
                 <thead className="bg-gray-700 text-white">
                   <tr>

@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Login from './pages/Login';
 import Absen from './pages/Absen';
 import Kegiatan from './pages/Kegiatan';
@@ -20,10 +20,15 @@ import Sidebar from './components/Sidebar';
 import DetailPresensi from './components/DetailPresensi';
 
 function App() {
+  const location = useLocation();
+
+  // Kondisi untuk menampilkan Sidebar dan Navbar kecuali di halaman login
+  const isLoginPage = location.pathname === '/login';
+
   return (
     <>
-      <Sidebar/>
-      <Navbar/>
+      {!isLoginPage && <Sidebar />}
+      {!isLoginPage && <Navbar />}
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route
