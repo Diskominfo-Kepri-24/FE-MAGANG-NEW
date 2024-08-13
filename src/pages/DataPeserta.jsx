@@ -5,9 +5,12 @@ import { Link } from 'react-router-dom';
 
 export default function DataPeserta() {
   const [peserta, setPeserta] = useState([]);
+  const [filteredPeserta, setFilteredPeserta] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchGetMagang = async () => {
@@ -22,12 +25,64 @@ export default function DataPeserta() {
           }
         );
         setPeserta(response.data.users);
+        setFilteredPeserta(response.data.users);
       } catch (error) {
         console.error('Error fetching magang data:', error);
       }
     };
     fetchGetMagang();
   }, []);
+
+  useEffect(() => {
+    const filterData = () => {
+      let filtered = peserta;
+
+      if (searchTerm) {
+        filtered = filtered.filter(
+          (item) =>
+            item.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.instansi.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+
+      if (startDate) {
+        filtered = filtered.filter(
+          (item) => new Date(item.mulai_magang) >= new Date(startDate)
+        );
+      }
+
+      if (endDate) {
+        filtered = filtered.filter(
+          (item) => new Date(item.akhir_magang) <= new Date(endDate)
+        );
+      }
+
+      setFilteredPeserta(filtered);
+    };
+
+    filterData();
+  }, [searchTerm, startDate, endDate, peserta]);
+
+  const paginate = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredPeserta.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredPeserta.length / itemsPerPage);
 
   return (
     <div className="flex h-screen">
@@ -77,9 +132,9 @@ export default function DataPeserta() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {peserta.map((data, index) => (
+                {currentItems.map((data, index) => (
                   <tr key={index}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{indexOfFirstItem + index + 1}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{data.nama}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{`${data.mulai_magang} / ${data.akhir_magang}`}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{data.instansi}</td>
@@ -97,10 +152,51 @@ export default function DataPeserta() {
                 ))}
               </tbody>
             </table>
+
+
+            {/* Pagination */}
+            <div className="flex justify-between items-center mt-4 px-4">
+              <div>
+                <span className="text-sm text-gray-700">
+                  Showing <span className="font-semibold">{indexOfFirstItem + 1}</span> to <span className="font-semibold">{Math.min(indexOfLastItem, filteredPeserta.length)}</span> of <span className="font-semibold">{filteredPeserta.length}</span> results
+                </span>
+              </div>
+              <nav>
+                <ul className="inline-flex -space-x-px">
+                  <li>
+                    <button
+                      onClick={goToPreviousPage}
+                      disabled={currentPage === 1}
+                      className={`px-3 py-2 leading-tight ${currentPage === 1 ? 'bg-gray-300 text-gray-500' : 'bg-white text-blue-500'} border border-gray-300 hover:bg-blue-500 hover:text-white`}
+                    >
+                      Previous
+                    </button>
+                  </li>
+                  {[...Array(totalPages)].map((_, i) => (
+                    <li key={i}>
+                      <button
+                        onClick={() => paginate(i + 1)}
+                        className={`px-3 py-2 leading-tight ${currentPage === i + 1 ? 'bg-blue-500 text-white' : 'bg-white text-blue-500'} border border-gray-300 hover:bg-blue-500 hover:text-white`}
+                      >
+                        {i + 1}
+                      </button>
+                    </li>
+                  ))}
+                  <li>
+                    <button
+                      onClick={goToNextPage}
+                      disabled={currentPage === totalPages}
+                      className={`px-3 py-2 leading-tight ${currentPage === totalPages ? 'bg-gray-300 text-gray-500' : 'bg-white text-blue-500'} border border-gray-300 hover:bg-blue-500 hover:text-white`}
+                    >
+                      Next
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            </div>
           </div>
         </main>
       </div>
     </div>
   );
 }
-

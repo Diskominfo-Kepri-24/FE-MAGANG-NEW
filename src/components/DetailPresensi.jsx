@@ -168,6 +168,9 @@ const combinedData = absensi.map(absenItem => {
                 No
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Tanggal
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Jam Masuk
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -189,6 +192,9 @@ const combinedData = absensi.map(absenItem => {
               <tr key={index}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                   {index + 1}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                  {data.tanggal || 'Tidak ada tanggal'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                   {data.presensiMasuk}

@@ -19,6 +19,7 @@ import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import DetailPresensi from './components/DetailPresensi';
 import Aksipenilaian from './components/Aksipenilaian';
+import RiwayatPembimbing from './components/RiwayatPembimbing';
 
 function App() {
   const location = useLocation();
@@ -157,6 +158,14 @@ function App() {
           element={
             <ProtectedRoute role="pembimbing">
               <Aksipenilaian />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/data-peserta/detail/:id"
+          element={
+            <ProtectedRoute role="pembimbing">
+              <RiwayatPembimbing />
             </ProtectedRoute>
           }
         />

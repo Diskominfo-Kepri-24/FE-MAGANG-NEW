@@ -1,111 +1,172 @@
 /* eslint-disable-next-line no-unused-vars */
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
-import * as XLSX from 'xlsx';
+import axios from 'axios';
 
 export default function Riwayat() {
-  const absenList = JSON.parse(localStorage.getItem('absenList') || '[]');
-  const kegiatanList = JSON.parse(localStorage.getItem('kegiatanList') || '[]');
-  const userName = localStorage.getItem('userName') || 'Pengguna'; // Assuming userName is stored in localStorage
-  const name = localStorage.getItem("name");
-  console.log (name)
+  const [combinedList, setCombinedList] = useState([]);
+  const name = localStorage.getItem("name"); // Get the name directly from localStorage
 
-  const handleExportExcel = () => {
-    const worksheetAbsen = XLSX.utils.json_to_sheet(absenList);
-    const worksheetKegiatan = XLSX.utils.json_to_sheet(kegiatanList);
-    const workbook = XLSX.utils.book_new();
+  const token = localStorage.getItem("access_token");
+  const userId = localStorage.getItem("user_id");
 
-    // Add sheets to workbook
-    XLSX.utils.book_append_sheet(workbook, worksheetAbsen, 'Riwayat Absen');
-    XLSX.utils.book_append_sheet(workbook, worksheetKegiatan, 'Riwayat Kegiatan');
+  useEffect(() => {
+    const fetchAbsenData = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_APP_LINK_API}/absen/magang`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-    // Save the workbook
-    XLSX.writeFile(workbook, 'riwayat.xlsx');
+        const absenData = response.data.user.map(item => ({
+          tanggal: item.tanggal,
+          jam_masuk: item.jam_masuk,
+          jam_pulang: item.jam_pulang,
+          catatan: '',
+          status: item.status,
+        }));
+
+        return absenData;
+      } catch (error) {
+        console.error('Failed to fetch absen data:', error);
+        return [];
+      }
+    };
+
+    const fetchKegiatanData = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_APP_LINK_API}/kegiatan`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const kegiatanData = response.data.filter(activity => activity.user_id == userId).map(item => ({
+          tanggal: item.tanggal,
+          jam_masuk: '',
+          jam_pulang: '',
+          catatan: item.catatan,
+          status: item.status,
+        }));
+
+        return kegiatanData;
+      } catch (error) {
+        console.error('Failed to fetch kegiatan data:', error);
+        return [];
+      }
+    };
+
+    const fetchData = async () => {
+      const absenData = await fetchAbsenData();
+      const kegiatanData = await fetchKegiatanData();
+      const combinedData = mergeData([...absenData, ...kegiatanData]);
+      setCombinedList(combinedData);
+    };
+
+    fetchData();
+  }, [token, userId]);
+
+  const mergeData = (data) => {
+    const merged = {};
+
+    data.forEach(item => {
+      if (!merged[item.tanggal]) {
+        merged[item.tanggal] = {
+          tanggal: item.tanggal,
+          jam_masuk: item.jam_masuk || '',
+          jam_pulang: item.jam_pulang || '',
+          catatan: item.catatan || '',
+          status: item.status || '',
+        };
+      } else {
+        if (item.jam_masuk) merged[item.tanggal].jam_masuk = item.jam_masuk;
+        if (item.jam_pulang) merged[item.tanggal].jam_pulang = item.jam_pulang;
+        if (item.catatan) merged[item.tanggal].catatan = item.catatan;
+        if (item.status && merged[item.tanggal].status !== 'Dikonfirmasi') {
+          merged[item.tanggal].status = item.status;
+        }
+      }
+    });
+
+    return Object.values(merged).sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
   };
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
-    doc.text(`Riwayat Absen dan Kegiatan untuk ${userName}`, 10, 10);
+    const pageWidth = doc.internal.pageSize.getWidth();
 
-    let y = 20;
-    doc.text('Riwayat Absen:', 10, y);
-    y += 10;
+    // Add Title
+    doc.setFontSize(16);
+    const titleText = "Detail Presensi";
+    const titleX = (pageWidth - doc.getTextWidth(titleText)) / 2;
+    doc.text(titleText, titleX, 10);
 
-    absenList.forEach((item, index) => {
-      doc.text(`Absen ${index + 1}: ${item.tanggal} - Masuk: ${item.masuk || 'Tidak Hadir'}, Pulang: ${item.pulang || 'Tidak Hadir'}`, 10, y);
-      y += 10;
+    // Add User Information
+    doc.setFontSize(12);
+    doc.text(`Nama: ${name}`, 14, 20);
+
+    // Add Table Headers
+    doc.autoTable({
+      startY: 30,
+      head: [['No', 'Tanggal', 'Jam Masuk', 'Jam Pulang', 'Catatan', 'Status']],
+      body: combinedList.map((item, index) => [
+        index + 1,
+        item.tanggal,
+        item.jam_masuk,
+        item.jam_pulang,
+        item.catatan,
+        item.status,
+      ]),
     });
 
-    y += 10;
-    doc.text('Riwayat Kegiatan:', 10, y);
-    y += 10;
-
-    kegiatanList.forEach((item, index) => {
-      doc.text(`Kegiatan ${index + 1}: ${item.tanggal} - Catatan: ${item.catatan}`, 10, y);
-      y += 10;
-    });
-
-    doc.save('riwayat.pdf');
+    doc.save(`riwayat_presensi_${userId}_${name || 'Pengguna'}.pdf`);
   };
 
-
-
   return (
-    <div className="flex h-screen">
-
-      <div className="flex flex-col flex-1 ml-64">
-        <main className="flex-1 p-6">
-          <h1 className="text-2xl font-bold mb-4">Riwayat</h1>
-          <p className="mb-4 text-lg font-medium">Nama Pengguna: {userName}</p>
-          <button className="bg-blue-950 text-white py-2 px-4 mr-2 rounded-md hover:bg-blue-700 transition" onClick={handleExportExcel}>Export to Excel</button>
-          <button className="bg-blue-950 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition" onClick={handleExportPDF}>Export to PDF</button>
-
-          <h2 className="text-xl font-semibold mt-4">Riwayat Absen</h2>
-          <table className="mt-4 w-full border border-gray-300 rounded-md">
-            <thead className="bg-gray-700 text-white">
-              <tr>
-                <th className="border px-4 py-2">No</th>
-                <th className="border px-4 py-2">Tanggal</th>
-                <th className="border px-4 py-2">Jam Masuk</th>
-                <th className="border px-4 py-2">Jam Pulang</th>
-                <th className="border px-4 py-2">Status</th>
+    <div className="flex flex-col ml-52 py-10 px-10 space-y-6">
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h2 className="text-xl font-semibold mb-4">Informasi Peserta Magang</h2>
+        <div className="flex items-center">
+          <span className="text-gray-600 font-medium">Nama:</span>
+          <span className="ml-2 text-gray-800">{name || "Tidak ada data"}</span>
+        </div>
+      </div>
+      <div className="overflow-x-auto bg-white p-6 rounded-lg shadow-md">
+        <div className="mb-4 flex justify-end">
+          <button onClick={handleExportPDF} className="px-4 py-2 bg-green-500 text-white rounded-lg">Export to PDF</button>
+        </div>
+        <h2 className="text-xl font-semibold mt-4">Riwayat Absen dan Kegiatan</h2>
+        <table className="mt-4 w-full border border-gray-300 rounded-md">
+          <thead className="bg-gray-700 text-white">
+            <tr>
+              <th className="border px-4 py-2">No</th>
+              <th className="border px-4 py-2">Tanggal</th>
+              <th className="border px-4 py-2">Jam Masuk</th>
+              <th className="border px-4 py-2">Jam Pulang</th>
+              <th className="border px-4 py-2">Catatan</th>
+              <th className="border px-4 py-2">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {combinedList.map((item, index) => (
+              <tr key={index} className="bg-gray-100 hover:bg-gray-200">
+                <td className="border px-4 py-2 text-center">{index + 1}</td>
+                <td className="border px-4 py-2 text-center">{item.tanggal}</td>
+                <td className="border px-4 py-2 text-center">{item.jam_masuk || '-'}</td>
+                <td className="border px-4 py-2 text-center">{item.jam_pulang || '-'}</td>
+                <td className="border px-4 py-2 text-center">{item.catatan || '-'}</td>
+                <td className={`border px-4 py-2 text-center ${getStatusBackgroundColor(item.status)}`}>{item.status}</td>
               </tr>
-            </thead>
-            <tbody>
-              {absenList.map((absen, index) => (
-                <tr key={index} className="bg-gray-100 hover:bg-gray-200">
-                  <td className="border px-4 py-2">{index + 1}</td>
-                  <td className="border px-4 py-2">{absen.tanggal}</td>
-                  <td className="border px-4 py-2">{absen.masuk || '-'}</td>
-                  <td className="border px-4 py-2">{absen.pulang || '-'}</td>
-                  <td className="border px-4 py-2">{absen.masuk && absen.pulang ? 'Hadir' : 'Belum Lengkap'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <h2 className="text-xl font-semibold mt-4">Riwayat Kegiatan</h2>
-          <table className="mt-4 w-full border border-gray-300 rounded-md">
-            <thead className="bg-gray-700 text-white">
-              <tr>
-                <th className="border px-4 py-2">No</th>
-                <th className="border px-4 py-2">Tanggal</th>
-                <th className="border px-4 py-2">Catatan</th>
-                <th className="border px-4 py-2">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {kegiatanList.map((kegiatan, index) => (
-                <tr key={index} className="bg-gray-100 hover:bg-gray-200">
-                  <td className="border px-4 py-2">{index + 1}</td>
-                  <td className="border px-4 py-2">{kegiatan.tanggal}</td>
-                  <td className="border px-4 py-2">{kegiatan.catatan}</td>
-                  <td className={`border px-4 py-2 ${getStatusBackgroundColor(kegiatan.status)}`}>{kegiatan.status}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </main>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
@@ -124,3 +185,4 @@ const getStatusBackgroundColor = (status) => {
       return '';
   }
 };
+
