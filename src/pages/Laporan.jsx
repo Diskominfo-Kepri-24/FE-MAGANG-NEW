@@ -1,5 +1,7 @@
 /* eslint-disable-next-line no-unused-vars */
 import React, { useState, useEffect } from 'react';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function Laporan() {
   const [link, setLink] = useState('');
@@ -26,10 +28,11 @@ export default function Laporan() {
           console.log('Laporan tidak ditemukan.');
         } else if (response.status === 401) {
           console.error('Unauthorized:', response.statusText);
-          alert('Anda tidak memiliki izin untuk mengakses data ini.');
+          toast.error('Anda tidak memiliki izin untuk mengakses data ini.');
         }
       } catch (error) {
         console.error('Error fetching laporan:', error);
+        toast.error('Gagal mengambil data laporan.');
       }
     };
 
@@ -52,23 +55,26 @@ export default function Laporan() {
       if (response.ok) {
         const result = await response.json();
         console.log('Laporan berhasil ditambahkan/diperbarui:', result);
-        alert(result.status);
+        toast.success(result.status);
+        setTimeout(() => {
+          window.location.reload();  // Reload halaman setelah submit berhasil
+        }, 1500);  // Give time for the toast to be visible before reloading
       } else if (response.status === 422) {
         const errorData = await response.json();
         console.error('Validasi gagal:', errorData.errors);
-        alert(`Validasi gagal: ${errorData.message}`);
+        toast.error(`Validasi gagal: ${errorData.message}`);
       } else if (response.status === 401) {
         const errorData = await response.json();
         console.error('Tidak terautentikasi:', errorData.message);
-        alert(`Error: ${errorData.message}`);
+        toast.error(`Error: ${errorData.message}`);
       } else {
         const errorText = await response.text();
         console.error('Error tidak terduga:', errorText);
-        alert(`Error tidak terduga: ${errorText}`);
+        toast.error(`Error tidak terduga: ${errorText}`);
       }
     } catch (error) {
       console.error('Error submitting laporan:', error);
-      alert("Terjadi kesalahan saat submit laporan.");
+      toast.error("Terjadi kesalahan saat submit laporan.");
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +91,7 @@ export default function Laporan() {
             placeholder="Link Gdrive Laporan Magang"
             value={link}
             onChange={(e) => setLink(e.target.value)}
-            disabled={isLaporanExists && !link} // Jika laporan sudah ada, input tidak bisa kosong
+            disabled={isLoading}  // Disable input selama proses loading
           />
           <button
             className="bg-blue-950 text-white py-2 px-4 rounded-md"
@@ -96,7 +102,7 @@ export default function Laporan() {
           </button>
         </main>
       </div>
+      <ToastContainer />
     </div>
   );
 }
-

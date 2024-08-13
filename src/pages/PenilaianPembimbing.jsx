@@ -1,3 +1,4 @@
+/* eslint-disable-next-line no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -8,7 +9,10 @@ export default function PenilaianPembimbing() {
   const [searchTerm, setSearchTerm] = useState("");
   const [combinedData, setCombinedData] = useState([]);
   const [ratedUsers, setRatedUsers] = useState(new Set()); // Track users who have been rated
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const navigate = useNavigate();
+
 
   useEffect(() => {
     // Fetch data penilaian
@@ -64,6 +68,31 @@ export default function PenilaianPembimbing() {
   const handleEdit = (id) => {
     navigate(`/dashboard/penilaian-pembimbing/nilai/${id}/edit`);
   };
+
+  // Pagination logic
+  const paginate = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = combinedData
+    .filter(penilaian => penilaian.nama.toLowerCase().includes(searchTerm.toLowerCase()))
+    .slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(combinedData.length / itemsPerPage);
+
 
   return (
     <div className="flex h-screen">
@@ -126,6 +155,47 @@ export default function PenilaianPembimbing() {
                   ))}
               </tbody>
             </table>
+
+        {/* Pagination */}
+        <div className="flex justify-between items-center mt-4 px-4">
+            <div>
+              <span className="text-sm text-gray-700">
+                Showing <span className="font-semibold">{indexOfFirstItem + 1}</span> to <span className="font-semibold">{Math.min(indexOfLastItem, combinedData.length)}</span> of <span className="font-semibold">{combinedData.length}</span> results
+              </span>
+            </div>
+            <nav>
+              <ul className="inline-flex -space-x-px">
+                <li>
+                  <button
+                    onClick={goToPreviousPage}
+                    disabled={currentPage === 1}
+                    className={`px-3 py-2 leading-tight ${currentPage === 1 ? 'bg-gray-300 text-gray-500' : 'bg-white text-blue-500'} border border-gray-300 hover:bg-blue-500 hover:text-white`}
+                  >
+                    Previous
+                  </button>
+                </li>
+                {[...Array(totalPages)].map((_, i) => (
+                  <li key={i}>
+                    <button
+                      onClick={() => paginate(i + 1)}
+                      className={`px-3 py-2 leading-tight ${currentPage === i + 1 ? 'bg-blue-500 text-white' : 'bg-white text-blue-500'} border border-gray-300 hover:bg-blue-500 hover:text-white`}
+                    >
+                      {i + 1}
+                    </button>
+                  </li>
+                ))}
+                <li>
+                  <button
+                    onClick={goToNextPage}
+                    disabled={currentPage === totalPages || totalPages === 0}
+                    className={`px-3 py-2 leading-tight ${currentPage === totalPages || totalPages === 0 ? 'bg-gray-300 text-gray-500' : 'bg-white text-blue-500'} border border-gray-300 hover:bg-blue-500 hover:text-white`}
+                  >
+                    Next
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </div>
 
         </main>
       </div>

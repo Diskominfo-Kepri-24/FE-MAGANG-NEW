@@ -1,28 +1,60 @@
 /* eslint-disable-next-line no-unused-vars */
 import React, { useState } from 'react';
+import axios from 'axios';
+
 export default function Pengaturan() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
 
-  const name = localStorage.getItem("name");
-  console.log (name)
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Tambahkan logika untuk mengubah password di sini
-    console.log('Password diubah:', { currentPassword, newPassword, confirmPassword });
+
+    if (newPassword !== confirmPassword) {
+      setError('Konfirmasi password tidak cocok dengan password baru.');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await axios.put(
+        'http://localhost:8000/api/v1/ubah-password',
+        { password: newPassword },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        setMessage('Password berhasil diubah.');
+        setError('');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      }
+    } catch (err) {
+      if (err.response.status === 422) {
+        setError(err.response.data.message || 'Validasi Gagal');
+      } else if (err.response.status === 401) {
+        setError('Unauthenticated. Please log in again.');
+      } else {
+        setError('Terjadi kesalahan saat mengubah password.');
+      }
+    }
   };
-
-
 
   return (
     <div className="flex h-screen">
-
       <div className="flex flex-col flex-1 ml-64">
-
         <main className="flex-1 p-6">
           <h1 className="text-2xl font-bold mb-4">Pengaturan</h1>
+          {message && <p className="text-green-500 mb-4">{message}</p>}
+          {error && <p className="text-red-500 mb-4">{error}</p>}
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <label className="block mb-2 text-lg">Password Saat Ini:</label>
